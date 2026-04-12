@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 01 - 데이터의 본질과 지식화 과정 | ADsP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3B82F6;
+      --primary-light: #EFF6FF;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --text1: #1A202C;
+      --text2: #4A5568;
+      --text3: #718096;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text1);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── STICKY TOP BAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 12px 20px;
+    }
+    .topbar-inner {
+      max-width: 720px; margin: 0 auto;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+      font-size: 13px; font-weight: 600;
+      color: var(--text2); cursor: pointer;
+      font-family: inherit; text-decoration: none;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .wrong-note-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: #FEF2F2; border: 1.5px solid #FCA5A5;
+      border-radius: 8px; padding: 6px 11px;
+      font-size: 12px; font-weight: 700; color: var(--danger);
+      text-decoration: none; transition: all 0.2s; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .wrong-note-btn:hover { background: #FEE2E2; border-color: var(--danger); }
+    .wrong-note-btn .wn-cnt {
+      background: var(--danger); color: white;
+      border-radius: 10px; padding: 1px 6px;
+      font-size: 11px; font-weight: 800;
+    }
+    .reset-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 11px;
+      font-size: 12px; font-weight: 600;
+      color: var(--text3); cursor: pointer;
+      font-family: inherit; transition: all 0.2s; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .reset-btn:hover { border-color: var(--danger); color: var(--danger); background: #FEF2F2; }
+    .topbar-info { flex: 1; min-width: 0; }
+    .topbar-unit-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--primary); letter-spacing: 0.5px; margin-bottom: 1px;
+    }
+    .topbar-title {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar-progress {
+      text-align: right; flex-shrink: 0;
+      font-size: 12px; font-weight: 700;
+      color: var(--text2);
+    }
+    .topbar-progress .count { font-size: 20px; color: var(--primary); }
+    .topbar-progbar-bg {
+      background: #E2E8F0; border-radius: 4px; height: 5px;
+      overflow: hidden; margin-top: 4px; min-width: 80px;
+    }
+    .topbar-progbar-fill {
+      height: 100%; background: var(--primary); border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%);
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 11px; font-weight: 600; color: #BFDBFE;
+      letter-spacing: 0.6px; margin-bottom: 10px;
+    }
+    .hero h1 { font-size: 20px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px; }
+    .hero p { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+    /* ── CONTENT ── */
+    .content { max-width: 720px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ── QUESTION CARD ── */
+    .q-card {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .q-card.answered-correct { border-color: var(--success); }
+    .q-card.answered-wrong { border-color: var(--danger); }
+
+    .q-header {
+      padding: 16px 20px 12px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .q-num-badge {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--primary-light); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; flex-shrink: 0;
+    }
+    .q-card.answered-correct .q-num-badge { background: #D1FAE5; color: var(--success); }
+    .q-card.answered-wrong .q-num-badge { background: #FEE2E2; color: var(--danger); }
+
+    .q-meta { flex: 1; }
+    .q-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .chip {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 5px;
+    }
+    .chip-diff-low { background: #D1FAE5; color: #065F46; }
+    .chip-diff-mid { background: #FEF3C7; color: #92400E; }
+    .chip-diff-high { background: #FEE2E2; color: #991B1B; }
+    .chip-kw { background: #EFF6FF; color: #1D4ED8; }
+    .chip-done { background: #D1FAE5; color: #065F46; }
+
+    .q-text {
+      padding: 0 20px 14px;
+      font-size: 15px; font-weight: 600; line-height: 1.6;
+      color: var(--text1);
+    }
+
+    /* ── OPTIONS ── */
+    .q-options { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .opt-btn {
+      display: flex; align-items: flex-start; gap: 10px;
+      width: 100%; padding: 11px 14px;
+      background: #F8FAFC; border: 1.5px solid var(--border);
+      border-radius: 10px; cursor: pointer;
+      font-family: inherit; font-size: 13.5px; font-weight: 500;
+      color: var(--text1); text-align: left;
+      transition: all 0.2s;
+    }
+    .opt-btn:hover:not(:disabled) {
+      background: var(--primary-light); border-color: var(--primary);
+      color: var(--primary);
+    }
+    .opt-btn:disabled { cursor: default; }
+    .opt-num {
+      width: 24px; height: 24px; border-radius: 6px;
+      background: var(--border); color: var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .opt-btn.correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-btn.correct .opt-num { background: var(--success); color: white; }
+    .opt-btn.wrong { background: #FEE2E2; border-color: var(--danger); color: #991B1B; }
+    .opt-btn.wrong .opt-num { background: var(--danger); color: white; }
+    .opt-btn.show-correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-btn.show-correct .opt-num { background: var(--success); color: white; }
+
+    /* ── EXPLANATION ── */
+    .q-explanation {
+      display: none;
+      margin: 0 20px 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #EFF6FF, #F0FDF4);
+      border-radius: 10px;
+      border-left: 4px solid var(--primary);
+    }
+    .q-explanation.show { display: block; animation: fadeSlide 0.3s ease; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-label {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+    .explanation-text {
+      font-size: 13px; line-height: 1.65; color: var(--text2);
+    }
+
+    /* ── MARK DONE ── */
+    .q-footer {
+      padding: 0 20px 16px;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
+    .done-toggle {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 7px 12px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      color: var(--text3); cursor: pointer; transition: all 0.2s;
+    }
+    .done-toggle:hover { border-color: var(--success); color: var(--success); background: #F0FDF4; }
+    .done-toggle.active { border-color: var(--success); background: var(--success); color: white; }
+    .done-toggle .check-icon { font-size: 14px; }
+
+    /* ── COMPLETE BANNER ── */
+    .complete-banner {
+      display: none;
+      background: linear-gradient(135deg, #064E3B, #065F46);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+    }
+    .complete-banner.show { display: block; animation: fadeSlide 0.5s ease; }
+    .complete-banner .emoji { font-size: 40px; margin-bottom: 10px; }
+    .complete-banner h2 { font-size: 22px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px; }
+    .complete-banner p { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px; }
+    .complete-banner .back-home-btn {
+      display: inline-block;
+      background: white; color: #065F46;
+      padding: 10px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .complete-banner .back-home-btn:hover { background: #D1FAE5; }
+  </style>
+</head>
+<body>
+
+<!-- STICKY TOPBAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="back-btn">← 대시보드</a>
+    <a href="wrongnote.html?unit=u01" class="wrong-note-btn" id="wrong-note-btn" style="display:none">
+      ✕ 오답노트 <span class="wn-cnt" id="wrong-note-cnt">0</span>
+    </a>
+    <div class="topbar-info">
+      <div class="topbar-unit-label">1과목 CHAPTER 01 · UNIT 01</div>
+      <div class="topbar-title">데이터의 본질과 지식화 과정</div>
+    </div>
+    <button class="reset-btn" onclick="resetQuiz()" title="풀이 초기화">↺ 초기화</button>
+    <div class="topbar-progress">
+      <span class="count" id="done-count">0</span><span>/18</span>
+      <div class="topbar-progbar-bg">
+        <div class="topbar-progbar-fill" id="top-progbar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">📊 1과목 · UNIT 01</div>
+    <h1>데이터의 본질과 지식화 과정</h1>
+    <p>데이터 정의 · 유형 · DIKW 피라미드 · 암묵지와 형식지 · SECI 모형</p>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="complete-banner" id="complete-banner">
+    <div class="emoji">🎉</div>
+    <h2>Unit 01 완료!</h2>
+    <p>18개 문제를 모두 학습했습니다. 수고하셨습니다!</p>
+    <a href="index.html" class="back-home-btn">← 대시보드로 돌아가기</a>
+  </div>
+  <div id="quiz-container"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  QUESTIONS DATA
+// ─────────────────────────────────────────────
+const UNIT_ID = 'u01';
+const TOTAL = 18;
+
+const questions = [
+  {
+    id: 1,
+    text: '다음 데이터 정의에 대한 설명으로 옳지 않은 것은?',
+    difficulty: '하',
+    keywords: ['데이터정의', '정보개념', '데이터특성'],
+    options: [
+      '객관적 사실이라는 존재적 특성을 갖는다.',
+      '데이터는 추론과 추정의 근거를 이루는 사실이다.',
+      '개별 데이터 자체로 의미가 중요한 객관적 사실이다.',
+      '데이터는 단순한 객체로서의 가치와 다른 객체와의 상호관계 속에서 가치를 갖는다.'
+    ],
+    answer: 3,
+    explanation: '데이터는 개별적으로 의미를 가지기보다는 다른 데이터나 상황과의 관계 속에서 의미(정보)로 해석된다.'
+  },
+  {
+    id: 2,
+    text: '다음 중 데이터 정의에 대한 설명으로 옳지 않은 것은?',
+    difficulty: '하',
+    keywords: ['데이터정의', 'DIKW', '지혜구분'],
+    options: [
+      '추론, 예측, 전망, 추정을 위한 근거(Basis)로 기능하는 특성을 갖는다.',
+      '데이터는 축적된 지식과 아이디어가 결합된 창의적인 산물이다.',
+      '데이터는 다른 객체와의 상호관계 속에서 가치를 갖는다.',
+      '데이터는 객관적 사실이라는 존재적 특성을 갖는다.'
+    ],
+    answer: 2,
+    explanation: '\'축적된 지식과 아이디어가 결합된 창의적인 산물\'은 데이터가 아니라 지혜(Wisdom)에 해당한다.'
+  },
+  {
+    id: 3,
+    text: '데이터는 그 형태에 따라 정성적 데이터와 정량적 데이터로 구분된다. 다음 중 정성적 데이터에 속하는 것은?',
+    difficulty: '하',
+    keywords: ['정성데이터', '정량데이터', '데이터유형'],
+    options: ['풍속', '습도', '기상특보', '1시간 강수량'],
+    answer: 3,
+    explanation: '정성적 데이터는 문자, 언어, 텍스트 등으로 표현되는 데이터이며, 기상특보는 텍스트 형태이므로 정성적 데이터이다.'
+  },
+  {
+    id: 4,
+    text: '다음 중 데이터에 대한 설명으로 옳은 것은?',
+    difficulty: '중',
+    keywords: ['정성정량', '비정형데이터', '데이터특성'],
+    options: [
+      '온도, 강우량 등 수치로 표현되는 데이터는 정성적 데이터이다.',
+      '정성적 데이터는 정량적 데이터에 비해 저장, 분석, 처리에 있어 더 많은 비용과 기술을 수반한다.',
+      '오디오, 비디오, 이미지는 반정형 데이터이다.',
+      '데이터는 주관적 사실이라는 존재적 특성과, 추론·예측의 근거라는 당위적 특성을 가진다.'
+    ],
+    answer: 2,
+    explanation: '① 수치 데이터는 정량적 데이터이다.\n③ 오디오, 비디오는 비정형 데이터이다.\n④ 데이터는 객관적 사실이다.'
+  },
+  {
+    id: 5,
+    text: '다음 중 데이터에 대한 설명으로 옳지 않은 것은?',
+    difficulty: '하',
+    keywords: ['정형데이터', '반정형데이터', '비정형데이터'],
+    options: [
+      '정형, 비정형, 반정형으로 구분할 수 있다.',
+      '이미지, 동영상은 비정형 데이터이다.',
+      'HTML은 정형 데이터의 예이다.',
+      '데이터에 따라 분석 방법이 달라질 수 있다.'
+    ],
+    answer: 3,
+    explanation: 'HTML은 반정형 데이터이며, 정형 데이터는 관계형 데이터베이스 형태의 데이터이다.'
+  },
+  {
+    id: 6,
+    text: '다음 중 데이터 유형이 나머지 셋과 다른 것은?',
+    difficulty: '하',
+    keywords: ['데이터유형', '정형비정형', '비정형데이터'],
+    options: [
+      'ERP 거래 데이터',
+      'CRM 거래 데이터',
+      '소음에 대한 음성 파일 데이터',
+      'Demand Forecast'
+    ],
+    answer: 3,
+    explanation: '음성 파일은 비정형 데이터이며, 나머지는 정형 데이터이다.'
+  },
+  {
+    id: 7,
+    text: '다음 데이터 중 비정형 데이터가 아닌 것은?',
+    difficulty: '하',
+    keywords: ['정형데이터', '비정형데이터', '데이터유형'],
+    options: [
+      '관측소에서 측정한 온도',
+      '사진',
+      '영상',
+      '페이스북 게시글'
+    ],
+    answer: 1,
+    explanation: '온도는 수치 형태의 정형 데이터이며, 사진·영상·게시글은 비정형 데이터이다.'
+  },
+  {
+    id: 8,
+    text: '다음 중 음성, 문자 등의 데이터를 포함하는 데이터의 종류는?',
+    difficulty: '하',
+    keywords: ['비정형데이터', '데이터분류'],
+    options: [
+      'Structured Data',
+      'Semi-Structured Data',
+      'Unstructured Data',
+      'Streamed Data'
+    ],
+    answer: 3,
+    explanation: '비정형 데이터(Unstructured Data)는 음성, 이미지, 영상, 텍스트 등을 포함한다.'
+  },
+  {
+    id: 9,
+    text: '다음 중 암묵지에 대한 설명으로 옳지 않은 것은?',
+    difficulty: '중',
+    keywords: ['암묵지', '형식지', '지식관리'],
+    options: [
+      '김장김치 담그기의 노하우이다.',
+      '암묵지는 개인에게 체화되기 때문에 공유하기 어렵다.',
+      '현장작업과 같은 경험을 통해 획득할 수 있는 지식이다.',
+      '회계, 재무 관련 대차대조표에 요구되는 지식의 매뉴얼 등이다.'
+    ],
+    answer: 4,
+    explanation: '④는 형식지에 해당한다. 암묵지는 경험 기반이며 공식화하기 어려운 지식이다.'
+  },
+  {
+    id: 10,
+    text: '암묵지와 형식지의 상호작용 관계로 옳은 것은?',
+    difficulty: '중',
+    keywords: ['SECI모형', '지식전환', '암묵지', '형식지'],
+    options: [
+      '내면화 → 연결화 → 표출화 → 공통화',
+      '표출화 → 공통화 → 연결화 → 내면화',
+      '공통화 → 표출화 → 연결화 → 내면화',
+      '연결화 → 내면화 → 표출화 → 공통화'
+    ],
+    answer: 3,
+    explanation: '지식 전환 과정은 공통화 → 표출화 → 연결화 → 내면화 순서이다.'
+  },
+  {
+    id: 11,
+    text: '개인에게 내재된 경험을 객관적인 데이터로 문서나 매체에 저장, 가공, 분석하는 과정을 무엇이라 하는가?',
+    difficulty: '중',
+    keywords: ['표출화', '지식전환', 'SECI'],
+    options: ['연결화', '표출화', '공통화', '내면화'],
+    answer: 2,
+    explanation: '표출화는 암묵지를 형식지로 변환하는 과정이다.'
+  },
+  {
+    id: 12,
+    text: '다음 [보기]는 암묵지와 형식지의 상호작용에 관한 설명이다. 1단계에서 4단계에 대한 내용을 알맞게 짝지은 것은?\n1단계 : 암묵적 지식 노하우를 다른 사람에게 알려주는 것 - (   )\n2단계 : 암묵적 지식 노하우를 책이나 교본 등 형식지로 만드는 것 - (   )\n3단계 : 책이나 교본에 자신이 알고 있는 새로운 지식을 추가하는 것 - (   )\n4단계 : 만들어진 책이나 교본을 보고 다른 직원들이 암묵적 지식을 습득하는 것 - (   )',
+    difficulty: '중',
+    keywords: ['SECI모형', '지식경영', '암묵지형식지'],
+    options: [
+      '공통화 → 표출화 → 연결화 → 내면화',
+      '연결화 → 내면화 → 표출화 → 공통화',
+      '연결화 → 공통화 → 내면화 → 표출화',
+      '공통화 → 표출화 → 내면화 → 연결화'
+    ],
+    answer: 1,
+    explanation: '지식 전달(공통화), 문서화(표출화), 지식 결합(연결화), 학습(내면화)의 순서이다.'
+  },
+  {
+    id: 13,
+    text: '다음 중 데이터를 가공 처리하여 얻을 수 있는 것으로 옳지 않은 것은?',
+    difficulty: '하',
+    keywords: ['DIKW', '데이터가공', '정보지식지혜'],
+    options: ['정보', '지식', '지혜', '기호'],
+    answer: 4,
+    explanation: '데이터를 가공하면 정보 → 지식 → 지혜를 얻을 수 있으며, 기호는 가공 이전의 데이터 형태이다.'
+  },
+  {
+    id: 14,
+    text: '데이터의 가공 및 처리와 데이터 간 상관관계 속에서 의미가 도출된 것은?',
+    difficulty: '하',
+    keywords: ['정보', 'DIKW', '데이터정의'],
+    options: ['정보', '지식', '지혜', '기호'],
+    answer: 1,
+    explanation: '데이터 간 관계 속에서 의미가 도출된 것은 정보(Information)이다.'
+  },
+  {
+    id: 15,
+    text: '아래 내용은 데이터, 정보, 지식의 차이점을 예시로 설명한 것이다.\n개념과 예시가 적절하게 연결된 것은?\n(가) A마트는 200원, B마트는 100원에 볼펜을 판매한다.\n(나) B마트는 A마트보다 볼펜 가격이 저렴하다.\n(다) 상대적으로 저렴한 B마트에서 볼펜을 사야겠다.\n(라) B마트의 다른 상품도 A마트보다 저렴할 것이다.',
+    difficulty: '중',
+    keywords: ['DIKW', '데이터정보지식', '개념구분'],
+    options: [
+      '데이터-(가), 정보-(나), 지식-(다)',
+      '데이터-(가), 정보-(다), 지식-(라)',
+      '데이터-(가), 정보-(나), 지식-(라)',
+      '데이터-(가), 정보-(라), 지식-(다)'
+    ],
+    answer: 1,
+    explanation: '(가) 단순 사실 → 데이터\n(나) 의미 부여 → 정보\n(다) 판단 및 행동 → 지식'
+  },
+  {
+    id: 16,
+    text: '다음 DIKW 피라미드에서 지식(Knowledge)에 대한 설명으로 옳은 것은?',
+    difficulty: '중',
+    keywords: ['지식', 'DIKW', '판단'],
+    options: [
+      'A마트는 200원, B마트는 100원에 볼펜을 판매한다.',
+      'B마트가 A마트보다 더 저렴해서 B마트에서 볼펜을 사야겠다.',
+      'B마트의 다른 상품도 A마트보다 저렴할 것이다.',
+      'B마트는 A마트보다 볼펜 가격이 더 저렴하다.'
+    ],
+    answer: 2,
+    explanation: '지식은 정보를 기반으로 무엇을 해야 할지 판단하는 단계이다.'
+  },
+  {
+    id: 17,
+    text: '다음 DIKW 피라미드에 대한 설명 중 그 종류가 나머지 셋과 다른 것은?',
+    difficulty: '중',
+    keywords: ['DIKW', '데이터지식구분'],
+    options: [
+      'A마트는 100원, B마트는 200원에 볼펜을 판매한다.',
+      'C마트의 소고기 가격은 100g에 3,000원이다.',
+      '오늘의 최저 온도는 10도, 최고 온도는 25도이다.',
+      'D마트의 당일 매출액은 2천만원으로 예상된다.'
+    ],
+    answer: 4,
+    explanation: '①~③은 단순 사실(데이터)이며, ④는 예측 결과로 지식에 해당한다.'
+  },
+  {
+    id: 18,
+    text: '다음 중 DIKW 피라미드에 대한 설명으로 옳지 않은 것은?',
+    difficulty: '중',
+    keywords: ['DIKW', '개념정의', '오답유형'],
+    options: [
+      '지식은 상호 연결된 정보 패턴을 이해하여 이를 토대로 예측한 결과물이다.',
+      '지혜는 근본 원리에 대한 깊은 이해를 바탕으로 도출된다.',
+      '데이터는 지식과 아이디어가 결합된 창의적인 산물이다.',
+      '데이터의 가공 및 상관/연관 관계 속에서 의미가 도출된 것이 정보이다.'
+    ],
+    answer: 3,
+    explanation: '③은 지혜에 대한 설명이며, 데이터는 가공 전의 단순한 사실이다.'
+  }
+];
+
+// ─────────────────────────────────────────────
+//  STATE & STORAGE
+// ─────────────────────────────────────────────
+const STORAGE_KEY = 'adsp_progress';
+const Q_STATE_KEY = 'adsp_u01_q';
+
+function getProgress() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+function getQState() {
+  try { return JSON.parse(localStorage.getItem(Q_STATE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveQState(s) { localStorage.setItem(Q_STATE_KEY, JSON.stringify(s)); }
+
+function getDoneCount() {
+  const p = getProgress();
+  let c = 0;
+  for (let i = 1; i <= TOTAL; i++) if (p[`u01_q${i}`]) c++;
+  return c;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+const OPTS = ['①', '②', '③', '④'];
+const DIFF_CLASS = { '하': 'chip-diff-low', '중': 'chip-diff-mid', '상': 'chip-diff-high' };
+const DIFF_TEXT = { '하': '하(쉬움)', '중': '중(보통)', '상': '상(어려움)' };
+
+function renderAll() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  const qState = getQState();
+  const progress = getProgress();
+
+  questions.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${q.id}`;
+
+    const isDone = !!progress[`u01_q${q.id}`];
+    const answered = qState[`q${q.id}`]; // null or answer index (1-based)
+
+    if (answered) {
+      card.classList.add(answered === q.answer ? 'answered-correct' : 'answered-wrong');
+    }
+
+    const kwHtml = q.keywords.map(k => `<span class="chip chip-kw">#${k}</span>`).join('');
+    const doneBadge = isDone ? '<span class="chip chip-done">✓ 완료</span>' : '';
+
+    card.innerHTML = `
+      <div class="q-header">
+        <div class="q-num-badge">${q.id}</div>
+        <div class="q-meta">
+          <div class="q-chips">
+            <span class="chip ${DIFF_CLASS[q.difficulty]}">${DIFF_TEXT[q.difficulty]}</span>
+            ${kwHtml}
+            ${doneBadge}
+          </div>
+        </div>
+      </div>
+      <div class="q-text">${q.text.replace(/\n/g, '<br>')}</div>
+      <div class="q-options" id="opts-${q.id}">
+        ${q.options.map((opt, i) => `
+          <button class="opt-btn" data-idx="${i+1}" onclick="selectOption(${q.id}, ${i+1})" ${answered ? 'disabled' : ''}>
+            <span class="opt-num">${OPTS[i]}</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="q-explanation ${answered ? 'show' : ''}" id="exp-${q.id}">
+        <div class="explanation-label">📖 해설</div>
+        <div class="explanation-text">${q.explanation.replace(/\n/g, '<br>')}</div>
+      </div>
+      <div class="q-footer">
+        <button class="done-toggle ${isDone ? 'active' : ''}" id="done-btn-${q.id}" onclick="toggleDone(${q.id})">
+          <span class="check-icon">${isDone ? '✓' : '○'}</span>
+          <span>${isDone ? '완료됨' : '완료 표시'}</span>
+        </button>
+      </div>`;
+
+    // Restore answered state
+    if (answered) {
+      const optsDiv = card.querySelector(`#opts-${q.id}`);
+      optsDiv.querySelectorAll('.opt-btn').forEach(btn => {
+        const idx = parseInt(btn.dataset.idx);
+        if (idx === q.answer) btn.classList.add('show-correct');
+        else if (idx === answered && answered !== q.answer) btn.classList.add('wrong');
+        btn.disabled = true;
+      });
+    }
+
+    container.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+function selectOption(qId, idx) {
+  const q = questions.find(x => x.id === qId);
+  const qState = getQState();
+  qState[`q${qId}`] = idx;
+  saveQState(qState);
+
+  const card = document.getElementById(`qcard-${qId}`);
+  const optsDiv = document.getElementById(`opts-${qId}`);
+  const expDiv = document.getElementById(`exp-${qId}`);
+
+  const isCorrect = idx === q.answer;
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+  card.querySelector('.q-num-badge');
+
+  optsDiv.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.disabled = true;
+    const bIdx = parseInt(btn.dataset.idx);
+    if (bIdx === q.answer) btn.classList.add('show-correct');
+    else if (bIdx === idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  expDiv.classList.add('show');
+
+  // Auto-mark as done if correct
+  if (isCorrect) {
+    const p = getProgress();
+    p[`u01_q${qId}`] = true;
+    saveProgress(p);
+    const doneBtn = document.getElementById(`done-btn-${qId}`);
+    doneBtn.classList.add('active');
+    doneBtn.innerHTML = '<span class="check-icon">✓</span><span>완료됨</span>';
+    // Refresh badge on card
+    const meta = card.querySelector('.q-meta .q-chips');
+    if (!meta.querySelector('.chip-done')) {
+      meta.insertAdjacentHTML('beforeend', '<span class="chip chip-done">✓ 완료</span>');
+    }
+  }
+
+  updateProgress();
+}
+
+function toggleDone(qId) {
+  const p = getProgress();
+  const key = `u01_q${qId}`;
+  p[key] = !p[key];
+  saveProgress(p);
+
+  const isDone = p[key];
+  const doneBtn = document.getElementById(`done-btn-${qId}`);
+  doneBtn.classList.toggle('active', isDone);
+  doneBtn.innerHTML = `<span class="check-icon">${isDone ? '✓' : '○'}</span><span>${isDone ? '완료됨' : '완료 표시'}</span>`;
+
+  // Update badge
+  const card = document.getElementById(`qcard-${qId}`);
+  const meta = card.querySelector('.q-meta .q-chips');
+  const existing = meta.querySelector('.chip-done');
+  if (isDone && !existing) {
+    meta.insertAdjacentHTML('beforeend', '<span class="chip chip-done">✓ 완료</span>');
+  } else if (!isDone && existing) {
+    existing.remove();
+  }
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const p = getProgress();
+  let done = 0;
+  for (let i = 1; i <= TOTAL; i++) if (p[`u01_q${i}`]) done++;
+
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('top-progbar').style.width = (done / TOTAL * 100) + '%';
+
+  // Update wrong note button
+  const qState = getQState();
+  let wrongCnt = 0;
+  for (let i = 1; i <= TOTAL; i++) {
+    const sel = qState[`q${i}`];
+    if (sel !== undefined && sel !== null && sel !== questions[i-1].answer) wrongCnt++;
+  }
+  const wnBtn = document.getElementById('wrong-note-btn');
+  const wnCnt = document.getElementById('wrong-note-cnt');
+  if (wrongCnt > 0) {
+    wnCnt.textContent = wrongCnt;
+    wnBtn.style.display = 'flex';
+  } else {
+    wnBtn.style.display = 'none';
+  }
+
+  // Mark unit as complete if all done
+  if (done === TOTAL) {
+    p['u01'] = true;
+    saveProgress(p);
+    document.getElementById('complete-banner').classList.add('show');
+    document.getElementById('complete-banner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    document.getElementById('complete-banner').classList.remove('show');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESET
+// ─────────────────────────────────────────────
+function resetQuiz() {
+  if (!confirm('Unit 01의 모든 풀이 기록을 초기화하시겠습니까?\n(진행률과 오답 기록이 모두 삭제됩니다)')) return;
+
+  // Clear question answers
+  localStorage.removeItem(Q_STATE_KEY);
+
+  // Clear per-question completion flags and unit flag from progress
+  const p = getProgress();
+  for (let i = 1; i <= TOTAL; i++) delete p[`u01_q${i}`];
+  delete p['u01'];
+  saveProgress(p);
+
+  // Clear retry records for this unit
+  try {
+    const retry = JSON.parse(localStorage.getItem('adsp_retry') || '{}');
+    for (let i = 1; i <= TOTAL; i++) delete retry[`u01_q${i}`];
+    localStorage.setItem('adsp_retry', JSON.stringify(retry));
+  } catch {}
+
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>

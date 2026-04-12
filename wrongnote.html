@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오답노트 | ADsP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F0F4F8; --surface: #FFFFFF; --border: #E2E8F0;
+      --text1: #1A202C; --text2: #4A5568; --text3: #718096;
+      --danger: #EF4444; --danger-light: #FEF2F2;
+      --success: #10B981; --success-light: #ECFDF5;
+      --warning: #F59E0B; --warning-light: #FFFBEB;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text1); min-height: 100vh; padding-bottom: 60px; }
+
+    /* ── TOPBAR ── */
+    .topbar { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.07); padding: 12px 20px; }
+    .topbar-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+    .back-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--text2); text-decoration: none; transition: all .2s; flex-shrink: 0; }
+    .back-btn:hover { border-color: #3B82F6; color: #3B82F6; background: #EFF6FF; }
+    .topbar-info { flex: 1; min-width: 0; }
+    .topbar-scope-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; margin-bottom: 1px; }
+    .topbar-title { font-size: 15px; font-weight: 800; }
+    .wrong-badge { display: flex; align-items: center; gap: 4px; background: var(--danger-light); border: 1.5px solid #FCA5A5; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--danger); flex-shrink: 0; }
+    .wrong-badge .num { font-size: 18px; font-weight: 800; }
+
+    /* ── HERO ── */
+    .hero { padding: 24px 20px; text-align: center; }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 4px 14px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.9); letter-spacing: .6px; margin-bottom: 10px; }
+    .hero h1 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .hero p { font-size: 12px; color: rgba(255,255,255,0.65); }
+    .hero-stats { display: flex; justify-content: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+    .hero-stat { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 18px; text-align: center; }
+    .hero-stat .num { font-size: 24px; font-weight: 800; color: #fff; }
+    .hero-stat .lbl { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 1px; }
+
+    /* ── CONTENT ── */
+    .content { max-width: 720px; margin: 0 auto; padding: 20px; }
+
+    /* ── ACTION BAR ── */
+    .action-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .action-btn { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; border: none; }
+    .btn-retry-all { background: #FEF3C7; color: #92400E; border: 1.5px solid #FCD34D; }
+    .btn-retry-all:hover { background: #FDE68A; border-color: var(--warning); }
+    .btn-download { background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #93C5FD; }
+    .btn-download:hover { background: #DBEAFE; border-color: #3B82F6; }
+
+    /* ── QUESTION CARD ── */
+    .q-card { background: var(--surface); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 20px; overflow: hidden; border-left: 5px solid var(--danger); transition: border-color .3s, box-shadow .3s; }
+    .q-card.retry-correct { border-left-color: var(--success); box-shadow: 0 2px 16px rgba(16,185,129,0.18); }
+    .q-card.in-retry { border-left-color: var(--warning); }
+    .q-card.retry-wrong-again { border-left-color: var(--danger); }
+
+    .q-header { padding: 14px 18px 10px; display: flex; align-items: flex-start; gap: 10px; }
+    .q-num { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; background: #FEE2E2; color: var(--danger); }
+    .q-card.retry-correct .q-num { background: #D1FAE5; color: var(--success); }
+    .q-card.in-retry .q-num { background: #FEF3C7; color: var(--warning); }
+
+    .q-meta { flex: 1; }
+    .q-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .chip { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+    .chip-wrong-status { background: #FEE2E2; color: #991B1B; }
+    .chip-retry-ok { background: #D1FAE5; color: #065F46; }
+    .chip-unit { background: #EFF6FF; color: #1D4ED8; }
+    .chip-diff-low { background: #D1FAE5; color: #065F46; }
+    .chip-diff-mid { background: #FEF3C7; color: #92400E; }
+    .chip-diff-high { background: #FEE2E2; color: #991B1B; }
+    .chip-kw { background: #F1F5F9; color: #475569; }
+
+    .q-text { padding: 6px 18px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.65; color: var(--text1); }
+
+    /* ── REVIEW OPTIONS ── */
+    .q-opts-review { padding: 0 18px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .opt-review { display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px; border-radius: 9px; font-size: 13px; line-height: 1.5; }
+    .opt-review.is-wrong { background: #FEE2E2; border: 1.5px solid var(--danger); }
+    .opt-review.is-correct { background: #D1FAE5; border: 1.5px solid var(--success); }
+    .opt-review.is-other { background: #F8FAFC; border: 1.5px solid var(--border); color: var(--text3); }
+    .opt-num-b { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+    .is-wrong .opt-num-b { background: var(--danger); color: #fff; }
+    .is-correct .opt-num-b { background: var(--success); color: #fff; }
+    .is-other .opt-num-b { background: var(--border); color: var(--text3); }
+    .opt-tag { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 4px; flex-shrink: 0; white-space: nowrap; }
+    .tag-wrong { background: var(--danger); color: #fff; }
+    .tag-correct { background: var(--success); color: #fff; }
+
+    /* ── RETRY OPTIONS ── */
+    .q-opts-retry { padding: 0 18px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .opt-retry { display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 10px 12px; border-radius: 9px; background: #F8FAFC; border: 1.5px solid var(--border); font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text1); text-align: left; cursor: pointer; transition: all .2s; line-height: 1.5; }
+    .opt-retry:hover:not(:disabled) { background: #FFF7ED; border-color: var(--warning); color: #92400E; }
+    .opt-retry:hover:not(:disabled) .opt-num-b { background: var(--warning); color: #fff; }
+    .opt-retry:disabled { cursor: default; }
+    .opt-retry.r-correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-retry.r-correct .opt-num-b { background: var(--success); color: #fff; }
+    .opt-retry.r-wrong { background: #FEE2E2; border-color: var(--danger); color: #991B1B; }
+    .opt-retry.r-wrong .opt-num-b { background: var(--danger); color: #fff; }
+    .opt-retry .opt-num-b { background: #E2E8F0; color: var(--text3); }
+
+    /* ── EXPLANATION ── */
+    .q-explanation { margin: 0 18px 14px; padding: 12px 14px; background: linear-gradient(135deg,#FFF7ED,#FFFBEB); border-radius: 10px; border-left: 4px solid var(--warning); }
+    .exp-label { font-size: 10px; font-weight: 700; color: #92400E; letter-spacing: .5px; margin-bottom: 5px; }
+    .exp-text { font-size: 12.5px; line-height: 1.65; color: var(--text2); }
+
+    /* ── CARD FOOTER ── */
+    .q-footer { padding: 0 18px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn-retry { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 8px; background: #FEF3C7; border: 1.5px solid #FCD34D; font-family: inherit; font-size: 12px; font-weight: 700; color: #92400E; cursor: pointer; transition: all .2s; }
+    .btn-retry:hover { background: #FDE68A; border-color: var(--warning); }
+    .btn-retry-again { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 8px; background: #FEE2E2; border: 1.5px solid #FCA5A5; font-family: inherit; font-size: 12px; font-weight: 700; color: #991B1B; cursor: pointer; transition: all .2s; }
+    .btn-retry-again:hover { background: #FECACA; }
+    .result-ok { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 8px; background: #D1FAE5; border: 1.5px solid #6EE7B7; font-size: 12px; font-weight: 700; color: #065F46; }
+    .hint-text { font-size: 11px; font-weight: 600; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 48px 24px; background: var(--surface); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .empty-state .emoji { font-size: 52px; margin-bottom: 12px; }
+    .empty-state h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; color: var(--text3); margin-bottom: 20px; line-height: 1.7; }
+    .empty-state .go-btn { display: inline-block; padding: 10px 24px; background: #3B82F6; color: #fff; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 700; transition: all .2s; }
+    .empty-state .go-btn:hover { background: #2563EB; }
+
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeSlide .3s ease; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="back-btn" id="back-btn">← 돌아가기</a>
+    <div class="topbar-info">
+      <div class="topbar-scope-label" id="scope-label" style="color:#EF4444">오답노트</div>
+      <div class="topbar-title" id="scope-title">로딩 중...</div>
+    </div>
+    <div class="wrong-badge">
+      <span class="num" id="wrong-count">0</span><span>개 오답</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero" id="hero" style="background:linear-gradient(135deg,#7F1D1D,#DC2626)">
+  <div class="hero-inner" id="hero-inner"></div>
+</div>
+
+<!-- CONTENT -->
+<main class="content">
+  <div class="action-bar" id="action-bar"></div>
+  <div id="cards"></div>
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  QUESTION DATA
+// ══════════════════════════════════════════════════════
+const U01_Q = [
+  {id:1,text:'다음 데이터 정의에 대한 설명으로 옳지 않은 것은?',difficulty:'하',keywords:['데이터정의','정보개념','데이터특성'],options:['객관적 사실이라는 존재적 특성을 갖는다.','데이터는 추론과 추정의 근거를 이루는 사실이다.','개별 데이터 자체로 의미가 중요한 객관적 사실이다.','데이터는 단순한 객체로서의 가치와 다른 객체와의 상호관계 속에서 가치를 갖는다.'],answer:3,explanation:'데이터는 개별적으로 의미를 가지기보다는 다른 데이터나 상황과의 관계 속에서 의미(정보)로 해석된다.'},
+  {id:2,text:'다음 중 데이터 정의에 대한 설명으로 옳지 않은 것은?',difficulty:'하',keywords:['데이터정의','DIKW','지혜구분'],options:['추론, 예측, 전망, 추정을 위한 근거(Basis)로 기능하는 특성을 갖는다.','데이터는 축적된 지식과 아이디어가 결합된 창의적인 산물이다.','데이터는 다른 객체와의 상호관계 속에서 가치를 갖는다.','데이터는 객관적 사실이라는 존재적 특성을 갖는다.'],answer:2,explanation:'\'축적된 지식과 아이디어가 결합된 창의적인 산물\'은 데이터가 아니라 지혜(Wisdom)에 해당한다.'},
+  {id:3,text:'데이터는 그 형태에 따라 정성적 데이터와 정량적 데이터로 구분된다. 다음 중 정성적 데이터에 속하는 것은?',difficulty:'하',keywords:['정성데이터','정량데이터','데이터유형'],options:['풍속','습도','기상특보','1시간 강수량'],answer:3,explanation:'정성적 데이터는 문자, 언어, 텍스트 등으로 표현되는 데이터이며, 기상특보는 텍스트 형태이므로 정성적 데이터이다.'},
+  {id:4,text:'다음 중 데이터에 대한 설명으로 옳은 것은?',difficulty:'중',keywords:['정성정량','비정형데이터','데이터특성'],options:['온도, 강우량 등 수치로 표현되는 데이터는 정성적 데이터이다.','정성적 데이터는 정량적 데이터에 비해 저장, 분석, 처리에 있어 더 많은 비용과 기술을 수반한다.','오디오, 비디오, 이미지는 반정형 데이터이다.','데이터는 주관적 사실이라는 존재적 특성과, 추론·예측의 근거라는 당위적 특성을 가진다.'],answer:2,explanation:'① 수치 데이터는 정량적 데이터이다.\n③ 오디오, 비디오는 비정형 데이터이다.\n④ 데이터는 객관적 사실이다.'},
+  {id:5,text:'다음 중 데이터에 대한 설명으로 옳지 않은 것은?',difficulty:'하',keywords:['정형데이터','반정형데이터','비정형데이터'],options:['정형, 비정형, 반정형으로 구분할 수 있다.','이미지, 동영상은 비정형 데이터이다.','HTML은 정형 데이터의 예이다.','데이터에 따라 분석 방법이 달라질 수 있다.'],answer:3,explanation:'HTML은 반정형 데이터이며, 정형 데이터는 관계형 데이터베이스 형태의 데이터이다.'},
+  {id:6,text:'다음 중 데이터 유형이 나머지 셋과 다른 것은?',difficulty:'하',keywords:['데이터유형','정형비정형','비정형데이터'],options:['ERP 거래 데이터','CRM 거래 데이터','소음에 대한 음성 파일 데이터','Demand Forecast'],answer:3,explanation:'음성 파일은 비정형 데이터이며, 나머지는 정형 데이터이다.'},
+  {id:7,text:'다음 데이터 중 비정형 데이터가 아닌 것은?',difficulty:'하',keywords:['정형데이터','비정형데이터','데이터유형'],options:['관측소에서 측정한 온도','사진','영상','페이스북 게시글'],answer:1,explanation:'온도는 수치 형태의 정형 데이터이며, 사진·영상·게시글은 비정형 데이터이다.'},
+  {id:8,text:'다음 중 음성, 문자 등의 데이터를 포함하는 데이터의 종류는?',difficulty:'하',keywords:['비정형데이터','데이터분류'],options:['Structured Data','Semi-Structured Data','Unstructured Data','Streamed Data'],answer:3,explanation:'비정형 데이터(Unstructured Data)는 음성, 이미지, 영상, 텍스트 등을 포함한다.'},
+  {id:9,text:'다음 중 암묵지에 대한 설명으로 옳지 않은 것은?',difficulty:'중',keywords:['암묵지','형식지','지식관리'],options:['김장김치 담그기의 노하우이다.','암묵지는 개인에게 체화되기 때문에 공유하기 어렵다.','현장작업과 같은 경험을 통해 획득할 수 있는 지식이다.','회계, 재무 관련 대차대조표에 요구되는 지식의 매뉴얼 등이다.'],answer:4,explanation:'④는 형식지에 해당한다. 암묵지는 경험 기반이며 공식화하기 어려운 지식이다.'},
+  {id:10,text:'암묵지와 형식지의 상호작용 관계로 옳은 것은?',difficulty:'중',keywords:['SECI모형','지식전환','암묵지','형식지'],options:['내면화 → 연결화 → 표출화 → 공동화','표출화 → 공동화 → 연결화 → 내면화','공동화 → 표출화 → 연결화 → 내면화','연결화 → 내면화 → 표출화 → 공동화'],answer:3,explanation:'지식 전환 과정은 공동화 → 표출화 → 연결화 → 내면화 순서이다.'},
+  {id:11,text:'개인에게 내재된 경험을 객관적인 데이터로 문서나 매체에 저장, 가공, 분석하는 과정을 무엇이라 하는가?',difficulty:'중',keywords:['표출화','지식전환','SECI'],options:['연결화','표출화','공동화','내면화'],answer:2,explanation:'표출화는 암묵지를 형식지로 변환하는 과정이다.'},
+  {id:12,text:'다음 [보기]는 암묵지와 형식지의 상호작용에 관한 설명이다. 1단계에서 4단계에 대한 내용을 알맞게 짝지은 것은?',difficulty:'중',keywords:['SECI모형','지식경영','암묵지형식지'],options:['공동화 → 표출화 → 연결화 → 내면화','연결화 → 내면화 → 표출화 → 공동화','연결화 → 공동화 → 내면화 → 표출화','공동화 → 표출화 → 내면화 → 연결화'],answer:1,explanation:'지식 전달(공동화), 문서화(표출화), 지식 결합(연결화), 학습(내면화)의 순서이다.'},
+  {id:13,text:'다음 중 데이터를 가공 처리하여 얻을 수 있는 것으로 옳지 않은 것은?',difficulty:'하',keywords:['DIKW','데이터가공','정보지식지혜'],options:['정보','지식','지혜','기호'],answer:4,explanation:'데이터를 가공하면 정보 → 지식 → 지혜를 얻을 수 있으며, 기호는 가공 이전의 데이터 형태이다.'},
+  {id:14,text:'데이터의 가공 및 처리와 데이터 간 상관관계 속에서 의미가 도출된 것은?',difficulty:'하',keywords:['정보','DIKW','데이터정의'],options:['정보','지식','지혜','기호'],answer:1,explanation:'데이터 간 관계 속에서 의미가 도출된 것은 정보(Information)이다.'},
+  {id:15,text:'아래 내용은 데이터, 정보, 지식의 차이점을 예시로 설명한 것이다.\n(가) A마트는 200원, B마트는 100원에 볼펜을 판매한다.\n(나) B마트는 A마트보다 볼펜 가격이 저렴하다.\n(다) 상대적으로 저렴한 B마트에서 볼펜을 사야겠다.\n(라) B마트의 다른 상품도 A마트보다 저렴할 것이다.\n개념과 예시가 적절하게 연결된 것은?',difficulty:'중',keywords:['DIKW','데이터정보지식','개념구분'],options:['데이터-(가), 정보-(나), 지식-(다)','데이터-(가), 정보-(다), 지식-(라)','데이터-(가), 정보-(나), 지식-(라)','데이터-(가), 정보-(라), 지식-(다)'],answer:1,explanation:'(가) 단순 사실 → 데이터\n(나) 의미 부여 → 정보\n(다) 판단 및 행동 → 지식'},
+  {id:16,text:'다음 DIKW 피라미드에서 지식(Knowledge)에 대한 설명으로 옳은 것은?',difficulty:'중',keywords:['지식','DIKW','판단'],options:['A마트는 200원, B마트는 100원에 볼펜을 판매한다.','B마트가 A마트보다 더 저렴해서 B마트에서 볼펜을 사야겠다.','B마트의 다른 상품도 A마트보다 저렴할 것이다.','B마트는 A마트보다 볼펜 가격이 더 저렴하다.'],answer:2,explanation:'지식은 정보를 기반으로 무엇을 해야 할지 판단하는 단계이다.'},
+  {id:17,text:'다음 DIKW 피라미드에 대한 설명 중 그 종류가 나머지 셋과 다른 것은?',difficulty:'중',keywords:['DIKW','데이터지식구분'],options:['A마트는 100원, B마트는 200원에 볼펜을 판매한다.','C마트의 소고기 가격은 100g에 3,000원이다.','오늘의 최저 온도는 10도, 최고 온도는 25도이다.','D마트의 당일 매출액은 2천만원으로 예상된다.'],answer:4,explanation:'①~③은 단순 사실(데이터)이며, ④는 예측 결과로 지식에 해당한다.'},
+  {id:18,text:'다음 중 DIKW 피라미드에 대한 설명으로 옳지 않은 것은?',difficulty:'중',keywords:['DIKW','개념정의','오답유형'],options:['지식은 상호 연결된 정보 패턴을 이해하여 이를 토대로 예측한 결과물이다.','지혜는 근본 원리에 대한 깊은 이해를 바탕으로 도출된다.','데이터는 지식과 아이디어가 결합된 창의적인 산물이다.','데이터의 가공 및 상관/연관 관계 속에서 의미가 도출된 것이 정보이다.'],answer:3,explanation:'③은 지혜에 대한 설명이며, 데이터는 가공 전의 단순한 사실이다.'}
+];
+
+const U02_Q = [
+  {id:1,text:'다음 중 데이터베이스 특징에 대한 설명으로 적절하지 않은 것은?',difficulty:'하',keywords:['데이터베이스특징','통합데이터','공용데이터'],options:['데이터베이스는 통합된 데이터이다. 이것은 데이터베이스에서 같은 내용의 데이터가 중복되어 있지 않다는 것을 의미한다.','데이터베이스는 저장된 데이터이다. 이것은 자기디스크나 자기테이프 등과 같이 컴퓨터가 접근할 수 있는 저장매체에 저장되는 것을 의미한다.','데이터베이스는 공용 데이터이다. 이것은 여러 사용자에게 서로 다른 목적으로 데이터베이스의 데이터를 공동으로 이용되는 것을 의미한다.','데이터베이스는 변화되는 데이터이다. 이것은 저장된 정량적 데이터 상태로 유지됨을 의미한다.'],answer:4,explanation:'변화되는 데이터는 항상 갱신되며 최신 상태를 유지해야 한다는 의미이지, 정적인 상태를 의미하지 않는다.'},
+  {id:2,text:'다음 중 데이터베이스의 일반적인 특징으로 옳지 않은 것은?',difficulty:'하',keywords:['DB특징','Integrated Stored Shared Changed'],options:['Unchanged Data','Stored Data','Shared Data','Integrated Data'],answer:1,explanation:'데이터베이스 특징은 Integrated(통합), Stored(저장), Shared(공용), Changed(변화)이며 Unchanged는 해당하지 않는다.'},
+  {id:3,text:'다음 중 데이터베이스의 특징으로 옳지 않은 것은?',difficulty:'하',keywords:['DB특징','정형비정형','데이터저장'],options:['USB 등 컴퓨터가 접근할 수 있는 저장 매체에 저장할 수 있다.','데이터는 공동으로 이용된다.','데이터베이스에는 정형 데이터만 저장할 수 있다.','데이터베이스에는 데이터가 중복되어 있지 않다.'],answer:3,explanation:'현대 데이터베이스는 정형뿐 아니라 비정형 데이터도 저장할 수 있다.'},
+  {id:4,text:'다음 중 데이터베이스의 일반적인 특징으로 옳지 않은 것은?',difficulty:'중',keywords:['DB특징','비정형데이터','데이터관리'],options:['데이터베이스는 새로운 데이터의 삽입, 기존 데이터의 삭제, 갱신으로 항상 변화하면서도 항상 현재의 정확한 데이터를 유지한다.','데이터베이스에서 동일한 내용의 데이터가 중복되어 있지 않다는 것을 의미한다.','여러 사용자가 서로 다른 목적으로 데이터베이스의 데이터를 공동으로 이용한다.','데이터베이스는 컴퓨터가 접근할 수 있는 저장 매체에 정형화된 데이터만 저장한다.'],answer:4,explanation:'데이터베이스는 정형 데이터뿐 아니라 비정형 데이터도 저장 가능하다.'},
+  {id:5,text:'다음 중 데이터베이스의 특징에 대한 설명으로 적절하지 않은 것은?',difficulty:'중',keywords:['DB특징','응용프로그램독립성'],options:['공동 접근 가능','데이터가 중복되지 않음','응용 프로그램 종속성','새로운 데이터의 추가, 기존 데이터의 삭제, 갱신으로 항상 변화함'],answer:3,explanation:'데이터베이스는 응용 프로그램과 독립성을 가지며 종속적이지 않다.'},
+  {id:6,text:'다음 중 데이터베이스의 특징에 대한 설명으로 옳지 않은 것은?',difficulty:'중',keywords:['DB특징','공용데이터','통합데이터'],options:['공용 데이터 : 동일한 목적으로 공동 이용한다.','변화되는 데이터 : 항상 최신 상태를 유지한다.','저장된 데이터 : 컴퓨터가 접근 가능한 저장매체에 저장된다.','통합된 데이터 : 동일 데이터의 중복이 없다.'],answer:1,explanation:'공용 데이터는 여러 사용자가 서로 다른 목적을 위해 데이터를 공동으로 사용하는 것을 의미한다.'},
+  {id:7,text:'다음 중 정보 관리적 측면에서의 데이터베이스를 설명한 것으로 옳은 것은?',difficulty:'중',keywords:['정보관리','DB특징','데이터관리'],options:['데이터 관리 목적에 따라 소비자가 저렴하게 사용할 수 있다.','정보 체계 관리를 통해 새로운 정보를 축적하고, 관리 용이성을 높이며, 데이터의 저장 및 추가에 활용될 수 있다.','데이터를 계층형으로 구조화하여 데이터의 검색을 쉽게 할 수 있다.','다양한 권한 관리 기능을 통해 보안성을 강화한다.'],answer:2,explanation:'정보 관리 측면은 데이터의 체계적 관리, 축적, 유지 및 활용의 용이성에 초점을 둔다.'},
+  {id:8,text:'다음 중 데이터베이스의 정보 축적 및 정보 전달 측면의 특징으로 옳지 않은 것은?',difficulty:'중',keywords:['정보전달','DB특징','확장성'],options:['기계가독성: 컴퓨터가 해석 가능한 형태로 저장된다.','검색가능성: 다양한 조건으로 신속하게 검색 가능하다.','원격조작성: 네트워크를 통해 원격 접근 가능하다.','한 번 구축되면 이후 변경이 불가능하다.'],answer:4,explanation:'데이터베이스는 기술 발전에 따라 구조와 환경을 변경 및 확장할 수 있다.'},
+  {id:9,text:'이용자가 필요한 정보를 신속하고 정확하게 찾기 위해 가장 중요한 측면은?',difficulty:'하',keywords:['정보이용','검색','사용자관점'],options:['정보 이용 측면','정보 관리 측면','정보 기술 발전 측면','경제 산업 측면'],answer:1,explanation:'사용자의 입장에서 빠르고 정확한 정보 접근을 지원하는 것은 정보 이용 측면이다.'},
+  {id:10,text:'사용자 요구에 따라 데이터를 처리하고 데이터베이스를 관리하는 소프트웨어는?',difficulty:'하',keywords:['DBMS','데이터관리'],options:['DBMS','Data Dictionary','SQL','Metadata'],answer:1,explanation:'DBMS(Database Management System)는 데이터베이스를 관리하고 사용자 요청을 처리하는 핵심 시스템이다.'},
+  {id:11,text:'복잡한 데이터 구조를 표현 및 관리하는 DBMS는?',difficulty:'하',keywords:['ODBMS','DB종류'],options:['RDBMS','ODBMS','데이터 사전','SQL'],answer:2,explanation:'ODBMS(Object-Oriented DBMS)는 객체 지향 데이터 구조를 관리한다.'},
+  {id:12,text:'객체 기반 계층 구조 데이터 관리를 수행하는 DBMS는?',difficulty:'중',keywords:['ODBMS','객체지향DB'],options:['ODBMS','MySQL','RDBMS','OS'],answer:1,explanation:'객체 간 상속 및 계층 구조를 지원하는 DBMS는 ODBMS이다.'},
+  {id:13,text:'다음 중 DBMS 설명으로 옳지 않은 것은?',difficulty:'중',keywords:['DBMS','한계'],options:['동시 사용자 처리 가능','일반적으로 관계형 DBMS 사용','모든 데이터 문제 해결 가능','사용자 접근 가능'],answer:3,explanation:'DBMS는 모든 문제를 해결하지 못하며 한계를 가진다.'},
+  {id:14,text:'다음 중 NoSQL과 관련 없는 것은?',difficulty:'하',keywords:['NoSQL','RDBMS'],options:['MongoDB','HBase','Redis','MySQL'],answer:4,explanation:'MySQL은 관계형 데이터베이스(RDBMS)이며 NoSQL이 아니다. MongoDB, HBase, Redis는 NoSQL DB이다.'},
+  {id:15,text:'데이터베이스 설계 절차 순서는?',difficulty:'중',keywords:['DB설계','절차'],options:['요구조건분석 → 개념적 설계 → 논리적 설계 → 물리적 설계','개념 → 요구 → 논리 → 물리','논리 → 요구 → 개념 → 물리','개념 → 물리 → 요구 → 논리'],answer:1,explanation:'표준 DB 설계 흐름: 요구조건분석 → 개념적 설계(ERD) → 논리적 설계(정규화) → 물리적 설계.'},
+  {id:16,text:'데이터의 일관성과 정확성을 유지하는 특성은?',difficulty:'중',keywords:['무결성','DB특성'],options:['가용성','무결성','효율성','기밀성'],answer:2,explanation:'무결성(Integrity)은 데이터의 정확성과 일관성을 보장하는 특성이다.'},
+  {id:17,text:'다음 중 상용 DB가 아닌 것은?',difficulty:'하',keywords:['DB종류','BI툴'],options:['DB2','Tableau','SQL Server','Oracle'],answer:2,explanation:'Tableau는 데이터 시각화/BI 도구이며 데이터베이스 관리 시스템(DBMS)이 아니다.'}
+];
+
+// ─── CONFIG ───
+const UNITS = {
+  u01: { id:'u01', title:'데이터의 본질과 지식화 과정', subject:'1과목 CH01', qKey:'adsp_u01_q', link:'unit01.html', questions: U01_Q },
+  u02: { id:'u02', title:'데이터베이스와 DBMS의 이해', subject:'1과목 CH01', qKey:'adsp_u02_q', link:'unit02.html', questions: U02_Q }
+};
+const GROUPS = {
+  g1: { title:'1과목 · 데이터 이해', icon:'📊', units:['u01','u02'], color:'#3B82F6', dark:'#1E3A8A' },
+  g2: { title:'2과목 · 데이터 분석 기획', icon:'🗂️', units:[], color:'#8B5CF6', dark:'#4C1D95' },
+  g3: { title:'3과목 CH01 · 통계·확률 및 탐색적 데이터 분석', icon:'📈', units:[], color:'#06B6D4', dark:'#164E63' },
+  g4: { title:'3과목 CH02 · 통계 분석', icon:'📉', units:[], color:'#10B981', dark:'#064E3B' },
+  g5: { title:'3과목 CH03 · 정형 데이터 마이닝', icon:'🤖', units:[], color:'#F59E0B', dark:'#78350F' },
+  g6: { title:'FINAL · 기출 복원 모의고사', icon:'📝', units:[], color:'#EF4444', dark:'#7F1D1D' }
+};
+const OPTS = ['①','②','③','④'];
+const DIFF = { '하':['chip-diff-low','하(쉬움)'], '중':['chip-diff-mid','중(보통)'], '상':['chip-diff-high','상(어려움)'] };
+
+// ─── STORAGE ───
+function getQState(key) { try { return JSON.parse(localStorage.getItem(key)||'{}'); } catch { return {}; } }
+function getRetry() { try { return JSON.parse(localStorage.getItem('adsp_retry')||'{}'); } catch { return {}; } }
+function saveRetry(s) { localStorage.setItem('adsp_retry', JSON.stringify(s)); }
+function rKey(uid, qid) { return `${uid}_q${qid}`; }
+
+// ─── WRONG DETECTION ───
+function wrongOf(unitId) {
+  const unit = UNITS[unitId]; if (!unit) return [];
+  const qs = getQState(unit.qKey);
+  return unit.questions
+    .filter(q => { const s = qs[`q${q.id}`]; return s !== undefined && s !== null && s !== q.answer; })
+    .map(q => ({ q, unitId, unitTitle: unit.title, selected: qs[`q${q.id}`] }));
+}
+function wrongOfGroup(gid) {
+  const g = GROUPS[gid]; if (!g) return [];
+  return g.units.flatMap(uid => wrongOf(uid));
+}
+
+// ─── GLOBAL STATE ───
+let G_ITEMS = [], G_SCOPE = '', G_BACK = 'index.html';
+
+// ─── RENDER CARD ───
+function renderCard(item, showUnit) {
+  const { q, unitId, unitTitle, selected } = item;
+  const retry = getRetry();
+  const rk = rKey(unitId, q.id);
+  const retryAns = retry[rk];
+  const retryOk = retryAns !== undefined && retryAns === q.answer;
+
+  const card = document.createElement('div');
+  card.className = 'q-card fade-in' + (retryOk ? ' retry-correct' : '');
+  card.id = `card-${unitId}-${q.id}`;
+
+  const statusChip = retryOk
+    ? `<span class="chip chip-retry-ok">✓ 복습완료</span>`
+    : `<span class="chip chip-wrong-status">✕ 오답</span>`;
+  const unitChip = showUnit ? `<span class="chip chip-unit">UNIT ${unitId.slice(1).padStart(2,'0')}</span>` : '';
+  const kwHtml = q.keywords.map(k=>`<span class="chip chip-kw">#${k}</span>`).join('');
+  const [dCls, dTxt] = DIFF[q.difficulty] || ['chip-diff-low','하'];
+
+  const optsHtml = q.options.map((opt,i) => {
+    const idx = i+1;
+    let cls = 'is-other', tag = '';
+    if (idx === q.answer)  { cls = 'is-correct'; tag = `<span class="opt-tag tag-correct">정답</span>`; }
+    if (idx === selected && idx !== q.answer) { cls = 'is-wrong'; tag = `<span class="opt-tag tag-wrong">내 답(오답)</span>`; }
+    return `<div class="opt-review ${cls}">
+      <span class="opt-num-b">${OPTS[i]}</span>
+      <span style="flex:1">${opt}</span>${tag}
+    </div>`;
+  }).join('');
+
+  const footerHtml = retryOk
+    ? `<div class="result-ok">🎉 복습 완료! 정답을 맞혔습니다.</div>`
+    : `<button class="btn-retry" onclick="startRetry('${unitId}',${q.id})">🔄 다시 풀기</button>`;
+
+  card.innerHTML = `
+    <div class="q-header">
+      <div class="q-num">${q.id}</div>
+      <div class="q-meta">
+        <div class="q-chips">
+          <span class="chip ${dCls}">${dTxt}</span>
+          ${unitChip}${statusChip}${kwHtml}
+        </div>
+      </div>
+    </div>
+    <div class="q-text">${q.text.replace(/\n/g,'<br>')}</div>
+    <div class="q-opts-review" id="rv-${unitId}-${q.id}">${optsHtml}</div>
+    <div class="q-explanation">
+      <div class="exp-label">📖 해설</div>
+      <div class="exp-text">${q.explanation.replace(/\n/g,'<br>')}</div>
+    </div>
+    <div class="q-footer" id="ft-${unitId}-${q.id}">${footerHtml}</div>`;
+  return card;
+}
+
+// ─── RETRY LOGIC ───
+function startRetry(uid, qid) {
+  const unit = UNITS[uid];
+  const q = unit.questions.find(x => x.id === qid);
+  const card = document.getElementById(`card-${uid}-${qid}`);
+  card.classList.remove('retry-correct','retry-wrong-again');
+  card.classList.add('in-retry');
+
+  document.getElementById(`rv-${uid}-${qid}`).outerHTML =
+    `<div class="q-opts-retry" id="rv-${uid}-${qid}">
+      ${q.options.map((opt,i)=>`
+        <button class="opt-retry" data-idx="${i+1}" onclick="doRetry('${uid}',${qid},${i+1})">
+          <span class="opt-num-b">${OPTS[i]}</span><span>${opt}</span>
+        </button>`).join('')}
+    </div>`;
+
+  document.getElementById(`ft-${uid}-${qid}`).innerHTML =
+    `<span class="hint-text" style="color:#92400E">⚡ 다시 풀기 중 — 보기를 선택하세요</span>`;
+}
+
+function doRetry(uid, qid, sel) {
+  const unit = UNITS[uid];
+  const q = unit.questions.find(x => x.id === qid);
+  const card = document.getElementById(`card-${uid}-${qid}`);
+  const rv = document.getElementById(`rv-${uid}-${qid}`);
+  const ft = document.getElementById(`ft-${uid}-${qid}`);
+  const ok = sel === q.answer;
+
+  const retry = getRetry();
+  retry[rKey(uid, qid)] = sel;
+  saveRetry(retry);
+
+  rv.querySelectorAll('.opt-retry').forEach(btn => {
+    btn.disabled = true;
+    const i = parseInt(btn.dataset.idx);
+    if (i === q.answer) btn.classList.add('r-correct');
+    else if (i === sel && !ok) btn.classList.add('r-wrong');
+  });
+
+  card.classList.remove('in-retry');
+  if (ok) {
+    card.classList.add('retry-correct');
+    ft.innerHTML = `<div class="result-ok">🎉 정답! 복습 완료!</div>`;
+    const sc = card.querySelector('.chip-wrong-status');
+    if (sc) { sc.className='chip chip-retry-ok'; sc.textContent='✓ 복습완료'; }
+    updateHeroStats();
+  } else {
+    card.classList.add('retry-wrong-again');
+    ft.innerHTML = `
+      <button class="btn-retry-again" onclick="startRetry('${uid}',${qid})">🔄 한 번 더</button>
+      <span class="hint-text" style="color:#EF4444">아직 오답 — 다시 도전하세요!</span>`;
+  }
+}
+
+function updateHeroStats() {
+  const retry = getRetry();
+  const done = G_ITEMS.filter(it => retry[rKey(it.unitId, it.q.id)] === it.q.answer).length;
+  const numEl = document.querySelector('#hero-inner .hero-stats');
+  if (!numEl) return;
+  const items = numEl.querySelectorAll('.hero-stat .num');
+  if (items[1]) items[1].textContent = done;
+  if (items[2]) items[2].textContent = G_ITEMS.length - done;
+}
+
+// ─── RETRY ALL ───
+function retryAll() {
+  const retry = getRetry();
+  G_ITEMS.forEach(it => delete retry[rKey(it.unitId, it.q.id)]);
+  saveRetry(retry);
+  location.reload();
+}
+
+// ─── TXT DOWNLOAD ───
+function downloadTxt() {
+  const retry = getRetry();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  const L = [];
+  const bar = '═'.repeat(56);
+  const sep = '─'.repeat(56);
+
+  L.push(bar);
+  L.push('  ADsP 오답노트');
+  L.push(`  대  상 : ${G_SCOPE}`);
+  L.push(`  생성일 : ${dateStr}`);
+  L.push(`  오  답 : ${G_ITEMS.length}문제`);
+  L.push(bar);
+  L.push('');
+
+  G_ITEMS.forEach(({q, unitId, unitTitle, selected}) => {
+    const rk = rKey(unitId, q.id);
+    const retryAns = retry[rk];
+    const retryOk = retryAns !== undefined && retryAns === q.answer;
+    L.push(sep);
+    L.push(`[문제 ${q.id}]  난이도: ${q.difficulty}  |  ${unitTitle}`);
+    L.push(`키워드 : ${q.keywords.map(k=>'#'+k).join(' ')}`);
+    if (retryAns !== undefined) L.push(`복습 상태 : ${retryOk ? '✓ 복습 완료' : '✕ 아직 오답'}`);
+    L.push('');
+    L.push(q.text);
+    L.push('');
+    q.options.forEach((opt,i) => {
+      const idx = i+1;
+      const myTag  = idx === selected        ? '  ← 내 답(오답)' : '';
+      const okTag  = idx === q.answer        ? '  ← 정답 ★'     : '';
+      L.push(`  ${OPTS[i]}  ${opt}${myTag}${okTag}`);
+    });
+    L.push('');
+    L.push(`  내가 선택한 답 : ${OPTS[selected-1]}  (오답)`);
+    L.push(`  정       답   : ${OPTS[q.answer-1]}`);
+    if (retryAns !== undefined) L.push(`  복습 시 선택   : ${OPTS[retryAns-1]}  ${retryOk ? '✓ 정답' : '✕ 오답'}`);
+    L.push('');
+    L.push('  [해설]');
+    q.explanation.split('\n').forEach(l => L.push('  '+l));
+    L.push('');
+  });
+
+  L.push(bar);
+  L.push('  Generated by ADsP 학습 대시보드');
+  L.push(bar);
+
+  const txt = L.join('\n');
+  const blob = new Blob(['\uFEFF'+txt],{type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ADsP_오답노트_${G_SCOPE.replace(/[\s·\/]/g,'_')}_${now.toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ─── PAGE RENDER ───
+function renderPage(items, title, color, dark, backLink, isGroup) {
+  G_ITEMS = items; G_SCOPE = title; G_BACK = backLink;
+
+  document.getElementById('back-btn').href = backLink;
+  document.getElementById('scope-label').style.color = color;
+  document.getElementById('scope-title').textContent = title;
+  document.getElementById('wrong-count').textContent = items.length;
+
+  // Hero
+  const hero = document.getElementById('hero');
+  hero.style.background = `linear-gradient(135deg,${dark},${color})`;
+  const retry = getRetry();
+  const done = items.filter(it => retry[rKey(it.unitId,it.q.id)] === it.q.answer).length;
+  document.getElementById('hero-inner').innerHTML = `
+    <div class="hero-badge">✏️ 오답노트</div>
+    <h1>${title}</h1>
+    <p>틀린 문제를 다시 풀고 완벽하게 이해하세요</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">${items.length}</div><div class="lbl">오답 문제</div></div>
+      <div class="hero-stat"><div class="num">${done}</div><div class="lbl">복습 완료</div></div>
+      <div class="hero-stat"><div class="num">${items.length - done}</div><div class="lbl">남은 복습</div></div>
+    </div>`;
+
+  // Action bar
+  const ab = document.getElementById('action-bar');
+  if (items.length > 0) {
+    ab.innerHTML = `
+      <button class="action-btn btn-retry-all" onclick="retryAll()">🔄 전체 다시 풀기</button>
+      <button class="action-btn btn-download" onclick="downloadTxt()">⬇ TXT 다운로드</button>`;
+  }
+
+  // Cards
+  const cont = document.getElementById('cards');
+  if (items.length === 0) {
+    cont.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">🎉</div>
+        <h2>오답이 없습니다!</h2>
+        <p>풀이한 문제가 모두 정답이거나<br>아직 시작하지 않은 단원입니다.</p>
+        <a href="${backLink}" class="go-btn">← 돌아가기</a>
+      </div>`;
+    return;
+  }
+  cont.innerHTML = '';
+  items.forEach(item => cont.appendChild(renderCard(item, !!isGroup)));
+}
+
+// ─── INIT ───
+(function init() {
+  const p = new URLSearchParams(location.search);
+  const uid = p.get('unit'), gid = p.get('group');
+
+  if (uid && UNITS[uid]) {
+    const unit = UNITS[uid];
+    const items = wrongOf(uid);
+    const num = uid.slice(1).padStart(2,'0');
+    renderPage(items, `UNIT ${num} · ${unit.title}`, '#3B82F6', '#1E3A8A', unit.link, false);
+  } else if (gid && GROUPS[gid]) {
+    const g = GROUPS[gid];
+    const items = wrongOfGroup(gid);
+    renderPage(items, g.title, g.color, g.dark, 'index.html', true);
+  } else {
+    location.href = 'index.html';
+  }
+})();
+</script>
+</body>
+</html>

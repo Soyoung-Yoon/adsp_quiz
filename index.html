@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADsP 학습 대시보드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --text1: #1A202C;
+      --text2: #4A5568;
+      --text3: #718096;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text1);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #1a3a5c 100%);
+      padding: 36px 24px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: -60px;
+      width: 300px; height: 300px;
+      background: rgba(99,102,241,0.15);
+      border-radius: 50%;
+    }
+    .site-header::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; right: -40px;
+      width: 250px; height: 250px;
+      background: rgba(16,185,129,0.10);
+      border-radius: 50%;
+    }
+    .header-inner { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+    .cert-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(99,102,241,0.25);
+      border: 1px solid rgba(99,102,241,0.5);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px;
+      color: #A5B4FC;
+      margin-bottom: 14px;
+    }
+    .cert-badge span { font-size: 14px; }
+    .site-header h1 {
+      font-size: 26px; font-weight: 800; color: #FFFFFF;
+      line-height: 1.3; margin-bottom: 6px;
+    }
+    .site-header h1 em { color: #60A5FA; font-style: normal; }
+    .site-header .subtitle {
+      font-size: 13px; color: rgba(255,255,255,0.55);
+      margin-bottom: 28px;
+    }
+    .overall-progress { max-width: 380px; margin: 0 auto; }
+    .prog-labels {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      margin-bottom: 8px;
+    }
+    .prog-labels strong { color: #60A5FA; font-weight: 700; }
+    .prog-bar-bg {
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px; height: 10px; overflow: hidden;
+    }
+    .prog-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #60A5FA 0%, #34D399 100%);
+      border-radius: 10px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+      width: 0%;
+    }
+
+    /* ── STATS ── */
+    .main-content { max-width: 1100px; margin: 0 auto; padding: 28px 20px 48px; }
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 14px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius-md);
+      padding: 18px 14px; text-align: center;
+      box-shadow: var(--shadow-sm);
+      border-top: 3px solid transparent;
+    }
+    .stat-card:nth-child(1) { border-top-color: #60A5FA; }
+    .stat-card:nth-child(2) { border-top-color: #34D399; }
+    .stat-card:nth-child(3) { border-top-color: #F59E0B; }
+    .stat-num { font-size: 30px; font-weight: 800; color: var(--text1); }
+    .stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; font-weight: 500; }
+
+    /* ── GROUPS GRID ── */
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+    @media (max-width: 720px) {
+      .groups-grid { grid-template-columns: 1fr; }
+      .stats-row .stat-num { font-size: 22px; }
+    }
+
+    /* ── GROUP CARD ── */
+    .group-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .group-header {
+      padding: 18px 20px 16px;
+      display: flex; align-items: center; gap: 14px;
+      position: relative; overflow: hidden;
+    }
+    .group-header .bg-stripe {
+      position: absolute; inset: 0;
+      opacity: 0.08;
+    }
+    .group-icon-wrap {
+      width: 46px; height: 46px;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(4px);
+      flex-shrink: 0; z-index: 1;
+    }
+    .group-title-area { flex: 1; z-index: 1; }
+    .group-subject-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+      opacity: 0.75; margin-bottom: 2px;
+    }
+    .group-title-area h2 {
+      font-size: 15px; font-weight: 700;
+      line-height: 1.35;
+    }
+    .group-ring-wrap { z-index: 1; flex-shrink: 0; }
+    .ring-container {
+      position: relative; width: 58px; height: 58px;
+    }
+    .ring-container svg { display: block; }
+    .ring-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--text1);
+    }
+
+    /* ── GROUP BODY ── */
+    .group-body { padding: 10px 14px 14px; }
+    .chapter-divider {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      color: var(--text3); text-transform: uppercase;
+      border-top: 1px solid var(--border);
+      padding-top: 8px; margin-top: 8px; margin-bottom: 5px;
+    }
+    .chapter-divider:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+
+    /* ── COMPACT UNIT LIST ── */
+    .unit-list { display: flex; flex-direction: column; gap: 3px; }
+    .unit-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 7px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      transition: all 0.18s;
+      cursor: pointer; text-decoration: none; color: inherit;
+    }
+    .unit-item.no-quiz {
+      border-style: dashed; border-width: 1px;
+      cursor: default; opacity: 0.55;
+    }
+    .unit-item:not(.no-quiz):hover {
+      border-color: var(--gc); background: var(--gcl);
+      box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+    }
+    .unit-item.done {
+      border-style: solid; border-color: #10B981;
+      background: #F0FDF4; opacity: 1;
+    }
+    .unit-num-badge {
+      width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800;
+      background: var(--gcl); color: var(--gc);
+      flex-shrink: 0; transition: all 0.18s;
+    }
+    .unit-item.done .unit-num-badge { background: #10B981; color: white; }
+    .unit-item.no-quiz .unit-num-badge { background: #F1F5F9; color: #94A3B8; }
+    .unit-title {
+      font-size: 12px; font-weight: 500; flex: 1; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--text2);
+    }
+    .unit-item:not(.no-quiz):hover .unit-title { color: var(--text1); }
+    .unit-item.done .unit-title { color: var(--text1); font-weight: 600; }
+    .unit-check {
+      width: 19px; height: 19px; border-radius: 50%;
+      border: 2px solid #CBD5E1;
+      background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.18s;
+      font-size: 10px; color: transparent;
+    }
+    .unit-check:hover { border-color: #10B981; background: #F0FDF4; color: #10B981; }
+    .unit-item.done .unit-check { border-color: #10B981; background: #10B981; color: white; }
+
+    /* ── HEADER WRONG-NOTE BUTTON ── */
+    .group-title-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .header-wrong-btn {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      background: rgba(255,255,255,0.45);
+      border: 1.5px solid currentColor;
+      text-decoration: none; transition: all 0.2s;
+      white-space: nowrap; position: relative; z-index: 1;
+      flex-shrink: 0;
+    }
+    .header-wrong-btn:hover { background: rgba(255,255,255,0.85); }
+
+    /* ── YEAR SECTION (FINAL group) ── */
+    .year-section {
+      font-size: 11px; font-weight: 700;
+      color: var(--text3); letter-spacing: 0.5px;
+      padding: 8px 0 5px;
+      border-bottom: 1px dashed var(--border);
+      margin-bottom: 6px;
+    }
+    .year-section:not(:first-child) { margin-top: 10px; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; font-size: 11px;
+      color: var(--text3); padding: 16px;
+    }
+    .reset-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 12px;
+      font-size: 11px; color: var(--text3);
+      cursor: pointer; font-family: inherit;
+      transition: all 0.2s; margin-top: 8px;
+    }
+    .reset-btn:hover { border-color: #EF4444; color: #EF4444; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="cert-badge"><span>🎯</span> DATA ANALYTICS SEMI-PROFESSIONAL</div>
+    <h1>ADsP <em>데이터분석 준전문가</em><br>학습 대시보드</h1>
+    <p class="subtitle">한국데이터산업진흥원 공식 자격증 · 체계적 학습으로 한 번에 합격</p>
+    <div class="overall-progress">
+      <div class="prog-labels">
+        <span>전체 진행률</span>
+        <strong id="overall-pct">0%</strong>
+      </div>
+      <div class="prog-bar-bg">
+        <div class="prog-bar-fill" id="overall-bar"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-total">57</div>
+      <div class="stat-label">전체 학습 항목</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-done">0</div>
+      <div class="stat-label">완료</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-remain">57</div>
+      <div class="stat-label">남은 항목</div>
+    </div>
+  </div>
+
+  <!-- Groups Grid -->
+  <div class="groups-grid" id="groups-grid">
+    <!-- dynamically rendered by JS -->
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p>진행 상황은 브라우저에 자동 저장됩니다</p>
+  <button class="reset-btn" onclick="resetProgress()">전체 초기화</button>
+</footer>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const GROUPS = [
+  {
+    id: 'g1',
+    color: '#3B82F6',
+    lightColor: '#EFF6FF',
+    icon: '📊',
+    subject: '1과목',
+    title: '데이터 이해',
+    chapters: [
+      {
+        label: 'CH01 데이터의 이해',
+        units: [
+          { id: 'u01', num: '01', title: '데이터의 본질과 지식화 과정', link: 'unit01.html' },
+          { id: 'u02', num: '02', title: '데이터베이스와 DBMS의 이해', link: 'unit02.html' },
+          { id: 'u03', num: '03', title: '데이터베이스 기본 개념과 SQL 기초', link: 'unit03.html' },
+          { id: 'u04', num: '04', title: '기업 내부 데이터베이스 솔루션', link: null },
+        ]
+      },
+      {
+        label: 'CH02 데이터의 가치와 미래',
+        units: [
+          { id: 'u05', num: '05', title: '빅데이터의 기본 개념', link: null },
+          { id: 'u06', num: '06', title: '빅데이터 개요: 출현/역할/가치/영향', link: null },
+          { id: 'u07', num: '07', title: '빅데이터의 활용', link: null },
+          { id: 'u08', num: '08', title: '빅데이터 위기 요인과 통제 방안', link: null },
+        ]
+      },
+      {
+        label: 'CH03 데이터 사이언스와 전략 인사이트',
+        units: [
+          { id: 'u09', num: '09', title: '데이터 사이언스: 분석 직무와 전문 역량', link: null },
+          { id: 'u10', num: '10', title: '빅데이터 분석과 가치 패러다임의 전환', link: null },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'g2',
+    color: '#8B5CF6',
+    lightColor: '#F5F3FF',
+    icon: '🗂️',
+    subject: '2과목',
+    title: '데이터 분석 기획',
+    chapters: [
+      {
+        label: 'CH01 데이터 분석 기획의 이해',
+        units: [
+          { id: 'u11', num: '11', title: '분석 기획의 이해와 체계', link: null },
+          { id: 'u12', num: '12', title: '분석 방법론 개요', link: null },
+          { id: 'u13', num: '13', title: 'KDD, CRISP-DM 분석 방법론', link: null },
+          { id: 'u14', num: '14', title: '빅데이터 분석 방법론: 절차, 분석 기획', link: null },
+          { id: 'u15', num: '15', title: '빅데이터 분석 방법론: 데이터 준비~평가 및 전개', link: null },
+          { id: 'u16', num: '16', title: '분석 과제 도출 방법', link: null },
+        ]
+      },
+      {
+        label: 'CH02 분석 마스터 플랜',
+        units: [
+          { id: 'u17', num: '17', title: '분석 마스터 플랜 & ISP', link: null },
+          { id: 'u18', num: '18', title: '분석 거버넌스와 분석 수준 진단', link: null },
+          { id: 'u19', num: '19', title: '데이터 거버넌스와 분석 조직 구조', link: null },
+          { id: 'u20', num: '20', title: '분석 프로젝트의 특징 및 특성 관리', link: null },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'g3',
+    color: '#06B6D4',
+    lightColor: '#ECFEFF',
+    icon: '📈',
+    subject: '3과목 CH01',
+    title: '통계·확률 및 탐색적 데이터 분석',
+    chapters: [
+      {
+        label: 'CHAPTER 01 통계·확률 및 탐색적 데이터 분석',
+        units: [
+          { id: 'u21', num: '21', title: '데이터 분석을 위한 통계 기초', link: null },
+          { id: 'u22', num: '22', title: '기술 통계량의 이해', link: null },
+          { id: 'u23', num: '23', title: 'R로 살펴보는 기술 통계', link: null },
+          { id: 'u24', num: '24', title: '그래프로 배우는 탐색적 분석', link: null },
+          { id: 'u25', num: '25', title: '결측값과 이상값 처리', link: null },
+          { id: 'u26', num: '26', title: '분석변수 처리', link: null },
+          { id: 'u27', num: '27', title: '상관 분석', link: null },
+          { id: 'u28', num: '28', title: '차원 축소 기법', link: null },
+          { id: 'u29', num: '29', title: '확률 및 확률분포', link: null },
+          { id: 'u30', num: '30', title: '이산 확률분포와 연속 확률분포', link: null },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'g4',
+    color: '#10B981',
+    lightColor: '#ECFDF5',
+    icon: '📉',
+    subject: '3과목 CH02',
+    title: '통계 분석',
+    chapters: [
+      {
+        label: 'CHAPTER 02 통계 분석',
+        units: [
+          { id: 'u31', num: '31', title: '추론 통계: 추정과 가설 검정', link: null },
+          { id: 'u32', num: '32', title: '추론 통계: 모수적 추론', link: null },
+          { id: 'u33', num: '33', title: '추론 통계: 비모수적 추론', link: null },
+          { id: 'u34', num: '34', title: '회귀 분석의 기본', link: null },
+          { id: 'u35', num: '35', title: '회귀 모형의 해석', link: null },
+          { id: 'u36', num: '36', title: '다중공선성 및 변수 선택법', link: null },
+          { id: 'u37', num: '37', title: '규제 회귀 모형, 회귀 모형의 평가지표', link: null },
+          { id: 'u38', num: '38', title: '시계열 분석', link: null },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'g5',
+    color: '#F59E0B',
+    lightColor: '#FFFBEB',
+    icon: '🤖',
+    subject: '3과목 CH03',
+    title: '정형 데이터 마이닝',
+    chapters: [
+      {
+        label: 'CHAPTER 03 정형 데이터 마이닝',
+        units: [
+          { id: 'u39', num: '39', title: '데이터 분석 기술의 계층적 이해', link: null },
+          { id: 'u40', num: '40', title: '모형 평가를 위한 데이터 분할 기법', link: null },
+          { id: 'u41', num: '41', title: '분류 분석: 로지스틱 회귀 모형', link: null },
+          { id: 'u42', num: '42', title: '지도 학습: 의사결정나무 모형', link: null },
+          { id: 'u43', num: '43', title: '지도 학습: k-NN, SVM, 앙상블 모형', link: null },
+          { id: 'u44', num: '44', title: '지도 학습: 인공신경망 모형', link: null },
+          { id: 'u45', num: '45', title: '지도 학습: 분류 모형 평가 지표', link: null },
+          { id: 'u46', num: '46', title: '비지도 학습: 군집 분석 - 계층적 군집', link: null },
+          { id: 'u47', num: '47', title: '비지도 학습: 군집 분석 - 비계층적 군집', link: null },
+          { id: 'u48', num: '48', title: '비지도 학습: SOM, 군집 모형 평가 지표', link: null },
+          { id: 'u49', num: '49', title: '비지도 학습: 연관 분석', link: null },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'g6',
+    color: '#EF4444',
+    lightColor: '#FEF2F2',
+    icon: '📝',
+    subject: 'FINAL',
+    title: '기출 복원 모의고사',
+    years: [
+      {
+        year: '2024 기출 복원 모의고사',
+        exams: [
+          { id: 'ex40', num: '40', title: '제40회 기출 복원 모의고사', link: null },
+          { id: 'ex41', num: '41', title: '제41회 기출 복원 모의고사', link: null },
+          { id: 'ex42', num: '42', title: '제42회 기출 복원 모의고사', link: null },
+          { id: 'ex43', num: '43', title: '제43회 기출 복원 모의고사', link: null },
+        ]
+      },
+      {
+        year: '2025 기출 복원 모의고사',
+        exams: [
+          { id: 'ex44', num: '44', title: '제44회 기출 복원 모의고사', link: null },
+          { id: 'ex45', num: '45', title: '제45회 기출 복원 모의고사', link: null },
+          { id: 'ex46', num: '46', title: '제46회 기출 복원 모의고사', link: null },
+          { id: 'ex47', num: '47', title: '제47회 기출 복원 모의고사', link: null },
+        ]
+      }
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────
+//  PROGRESS STORAGE
+// ─────────────────────────────────────────────
+const STORAGE_KEY = 'adsp_progress';
+
+function getProgress() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function saveProgress(p) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+}
+
+function toggleUnit(unitId) {
+  const p = getProgress();
+  p[unitId] = !p[unitId];
+  saveProgress(p);
+  updateUI(p);
+}
+
+function resetProgress() {
+  if (confirm('모든 학습 진행 상황을 초기화하시겠습니까?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    updateUI({});
+  }
+}
+
+// ─────────────────────────────────────────────
+//  WRONG ANSWER COUNT (for group footer)
+// ─────────────────────────────────────────────
+const UNIT_ANSWERS = {
+  u01: [3,2,3,2,3,3,1,3,4,3,2,1,4,1,1,2,4,3],
+  u02: [4,1,3,4,3,1,2,4,1,1,2,1,3,4,1,2,2]
+};
+const UNIT_Q_KEYS = { u01: 'adsp_u01_q', u02: 'adsp_u02_q' };
+
+function getGroupWrongCount(groupId) {
+  const g = GROUPS.find(x => x.id === groupId);
+  if (!g || !g.chapters) return 0;
+  const unitIds = g.chapters.flatMap(ch => ch.units.map(u => u.id));
+  let count = 0;
+  for (const uid of unitIds) {
+    const answers = UNIT_ANSWERS[uid];
+    if (!answers) continue;
+    try {
+      const qs = JSON.parse(localStorage.getItem(UNIT_Q_KEYS[uid]) || '{}');
+      answers.forEach((ans, i) => {
+        const sel = qs[`q${i+1}`];
+        if (sel !== undefined && sel !== null && sel !== ans) count++;
+      });
+    } catch {}
+  }
+  return count;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function getAllItems() {
+  const items = [];
+  for (const g of GROUPS) {
+    if (g.chapters) {
+      for (const ch of g.chapters)
+        for (const u of ch.units) items.push(u.id);
+    } else if (g.years) {
+      for (const y of g.years)
+        for (const e of y.exams) items.push(e.id);
+    }
+  }
+  return items;
+}
+
+function groupTotalAndDone(g, progress) {
+  let total = 0, done = 0;
+  const collect = (arr) => { for (const i of arr) { total++; if (progress[i.id]) done++; } };
+  if (g.chapters) for (const ch of g.chapters) collect(ch.units);
+  else if (g.years) for (const y of g.years) collect(y.exams);
+  return { total, done };
+}
+
+function makeSVGRing(done, total, color) {
+  const r = 24, cx = 29, cy = 29;
+  const circ = 2 * Math.PI * r;
+  const pct = total === 0 ? 0 : done / total;
+  const offset = circ * (1 - pct);
+  return `<svg width="58" height="58" viewBox="0 0 58 58">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E2E8F0" stroke-width="5"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="5"
+      stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+      stroke-linecap="round"
+      transform="rotate(-90 ${cx} ${cy})"
+      style="transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)"/>
+  </svg>`;
+}
+
+function renderGroups(progress) {
+  const grid = document.getElementById('groups-grid');
+  grid.innerHTML = '';
+
+  for (const g of GROUPS) {
+    const { total, done } = groupTotalAndDone(g, progress);
+    const pct = total === 0 ? 0 : Math.round(done / total * 100);
+
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.style.setProperty('--gc', g.color);
+    card.style.setProperty('--gcl', g.lightColor);
+
+    // Header
+    const wrongCnt = getGroupWrongCount(g.id);
+    const wrongBtnHtml = wrongCnt > 0
+      ? `<a href="wrongnote.html?group=${g.id}" class="header-wrong-btn" style="color:${g.color}" title="오답 ${wrongCnt}개 · 다시 풀기" onclick="event.stopPropagation()">✕ 오답 ${wrongCnt}</a>`
+      : '';
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'group-header';
+    headerDiv.style.color = g.color;
+    headerDiv.innerHTML = `
+      <div class="bg-stripe" style="background:${g.color}"></div>
+      <div class="group-icon-wrap">${g.icon}</div>
+      <div class="group-title-area">
+        <div class="group-subject-tag" style="color:${g.color}">${g.subject}</div>
+        <div class="group-title-row">
+          <h2 style="color:${g.color}">${g.title}</h2>
+          ${wrongBtnHtml}
+        </div>
+      </div>
+      <div class="group-ring-wrap">
+        <div class="ring-container" id="ring-${g.id}">
+          ${makeSVGRing(done, total, g.color)}
+          <div class="ring-text">${pct}%</div>
+        </div>
+      </div>`;
+    card.appendChild(headerDiv);
+
+    // Body
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'group-body';
+
+    if (g.chapters) {
+      // Units with chapters
+      const listDiv = document.createElement('div');
+      listDiv.className = 'unit-list';
+      g.chapters.forEach((ch, ci) => {
+        const divLabel = document.createElement('div');
+        divLabel.className = 'chapter-divider';
+        divLabel.textContent = ch.label;
+        listDiv.appendChild(divLabel);
+
+        ch.units.forEach(u => {
+          listDiv.appendChild(makeUnitItem(u, progress, g));
+        });
+      });
+      bodyDiv.appendChild(listDiv);
+    } else if (g.years) {
+      // Final exams with years
+      const listDiv = document.createElement('div');
+      listDiv.className = 'unit-list';
+      g.years.forEach(y => {
+        const yearLabel = document.createElement('div');
+        yearLabel.className = 'year-section';
+        yearLabel.textContent = y.year;
+        listDiv.appendChild(yearLabel);
+        y.exams.forEach(e => {
+          listDiv.appendChild(makeExamItem(e, progress, g));
+        });
+      });
+      bodyDiv.appendChild(listDiv);
+    }
+
+    card.appendChild(bodyDiv);
+    grid.appendChild(card);
+  }
+}
+
+function makeUnitItem(u, progress, g) {
+  const isDone = !!progress[u.id];
+  const hasQuiz = !!u.link;
+  const item = document.createElement('div');
+  item.className = 'unit-item' + (isDone ? ' done' : '') + (hasQuiz ? '' : ' no-quiz');
+  item.dataset.id = u.id;
+  item.style.setProperty('--gc', g.color);
+  item.style.setProperty('--gcl', g.lightColor);
+
+  item.innerHTML = `
+    <div class="unit-num-badge">${u.num}</div>
+    <span class="unit-title">${u.title}</span>
+    <button class="unit-check" title="완료 표시" onclick="event.stopPropagation();toggleUnit('${u.id}')">${isDone ? '✓' : ''}</button>`;
+
+  if (hasQuiz) {
+    item.onclick = (e) => {
+      if (!e.target.classList.contains('unit-check')) window.location.href = u.link;
+    };
+  }
+  return item;
+}
+
+function makeExamItem(e, progress, g) {
+  const isDone = !!progress[e.id];
+  const item = document.createElement('div');
+  item.className = 'unit-item' + (isDone ? ' done' : '');
+  item.dataset.id = e.id;
+  item.style.setProperty('--gc', g.color);
+  item.style.setProperty('--gcl', g.lightColor);
+
+  item.className += ' no-quiz';
+  item.innerHTML = `
+    <div class="unit-num-badge">${e.num}회</div>
+    <span class="unit-title">${e.title}</span>
+    <button class="unit-check" title="완료 표시" onclick="event.stopPropagation();toggleUnit('${e.id}')">${isDone ? '✓' : ''}</button>`;
+
+  return item;
+}
+
+function updateUI(progress) {
+  if (!progress) progress = getProgress();
+
+  // Update group cards
+  renderGroups(progress);
+
+  // Overall stats
+  const allItems = getAllItems();
+  const total = allItems.length;
+  const done = allItems.filter(id => progress[id]).length;
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-remain').textContent = total - done;
+  document.getElementById('overall-pct').textContent = pct + '%';
+  document.getElementById('overall-bar').style.width = pct + '%';
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+updateUI(getProgress());
+</script>
+</body>
+</html>

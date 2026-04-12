@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 02 - 데이터베이스와 DBMS의 이해 | ADsP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3B82F6;
+      --primary-light: #EFF6FF;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --text1: #1A202C;
+      --text2: #4A5568;
+      --text3: #718096;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text1);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── STICKY TOP BAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 12px 20px;
+    }
+    .topbar-inner {
+      max-width: 720px; margin: 0 auto;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+      font-size: 13px; font-weight: 600;
+      color: var(--text2); cursor: pointer;
+      font-family: inherit; text-decoration: none;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .wrong-note-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: #FEF2F2; border: 1.5px solid #FCA5A5;
+      border-radius: 8px; padding: 6px 11px;
+      font-size: 12px; font-weight: 700; color: var(--danger);
+      text-decoration: none; transition: all 0.2s; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .wrong-note-btn:hover { background: #FEE2E2; border-color: var(--danger); }
+    .wrong-note-btn .wn-cnt {
+      background: var(--danger); color: white;
+      border-radius: 10px; padding: 1px 6px;
+      font-size: 11px; font-weight: 800;
+    }
+    .reset-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 11px;
+      font-size: 12px; font-weight: 600;
+      color: var(--text3); cursor: pointer;
+      font-family: inherit; transition: all 0.2s; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .reset-btn:hover { border-color: var(--danger); color: var(--danger); background: #FEF2F2; }
+    .topbar-info { flex: 1; min-width: 0; }
+    .topbar-unit-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--primary); letter-spacing: 0.5px; margin-bottom: 1px;
+    }
+    .topbar-title {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar-progress {
+      text-align: right; flex-shrink: 0;
+      font-size: 12px; font-weight: 700; color: var(--text2);
+    }
+    .topbar-progress .count { font-size: 20px; color: var(--primary); }
+    .topbar-progbar-bg {
+      background: #E2E8F0; border-radius: 4px; height: 5px;
+      overflow: hidden; margin-top: 4px; min-width: 80px;
+    }
+    .topbar-progbar-fill {
+      height: 100%; background: var(--primary); border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%);
+      padding: 24px 20px; text-align: center;
+    }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 11px; font-weight: 600; color: #BFDBFE;
+      letter-spacing: 0.6px; margin-bottom: 10px;
+    }
+    .hero h1 { font-size: 20px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px; }
+    .hero p { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+    /* ── CONTENT ── */
+    .content { max-width: 720px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ── QUESTION CARD ── */
+    .q-card {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .q-card.answered-correct { border-color: var(--success); }
+    .q-card.answered-wrong { border-color: var(--danger); }
+
+    .q-header {
+      padding: 16px 20px 12px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .q-num-badge {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--primary-light); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; flex-shrink: 0;
+    }
+    .q-card.answered-correct .q-num-badge { background: #D1FAE5; color: var(--success); }
+    .q-card.answered-wrong .q-num-badge { background: #FEE2E2; color: var(--danger); }
+
+    .q-meta { flex: 1; }
+    .q-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .chip {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 5px;
+    }
+    .chip-diff-low { background: #D1FAE5; color: #065F46; }
+    .chip-diff-mid { background: #FEF3C7; color: #92400E; }
+    .chip-diff-high { background: #FEE2E2; color: #991B1B; }
+    .chip-kw { background: #EFF6FF; color: #1D4ED8; }
+    .chip-done { background: #D1FAE5; color: #065F46; }
+
+    .q-text {
+      padding: 0 20px 14px;
+      font-size: 15px; font-weight: 600; line-height: 1.6; color: var(--text1);
+    }
+
+    /* ── OPTIONS ── */
+    .q-options { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .opt-btn {
+      display: flex; align-items: flex-start; gap: 10px;
+      width: 100%; padding: 11px 14px;
+      background: #F8FAFC; border: 1.5px solid var(--border);
+      border-radius: 10px; cursor: pointer;
+      font-family: inherit; font-size: 13.5px; font-weight: 500;
+      color: var(--text1); text-align: left;
+      transition: all 0.2s;
+    }
+    .opt-btn:hover:not(:disabled) {
+      background: var(--primary-light); border-color: var(--primary); color: var(--primary);
+    }
+    .opt-btn:disabled { cursor: default; }
+    .opt-num {
+      width: 24px; height: 24px; border-radius: 6px;
+      background: var(--border); color: var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; flex-shrink: 0; transition: all 0.2s;
+    }
+    .opt-btn.correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-btn.correct .opt-num { background: var(--success); color: white; }
+    .opt-btn.wrong { background: #FEE2E2; border-color: var(--danger); color: #991B1B; }
+    .opt-btn.wrong .opt-num { background: var(--danger); color: white; }
+    .opt-btn.show-correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-btn.show-correct .opt-num { background: var(--success); color: white; }
+
+    /* ── EXPLANATION ── */
+    .q-explanation {
+      display: none;
+      margin: 0 20px 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #EFF6FF, #F0FDF4);
+      border-radius: 10px;
+      border-left: 4px solid var(--primary);
+    }
+    .q-explanation.show { display: block; animation: fadeSlide 0.3s ease; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-label {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+    .explanation-text { font-size: 13px; line-height: 1.65; color: var(--text2); }
+
+    /* ── MARK DONE ── */
+    .q-footer {
+      padding: 0 20px 16px;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
+    .done-toggle {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 7px 12px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      color: var(--text3); cursor: pointer; transition: all 0.2s;
+    }
+    .done-toggle:hover { border-color: var(--success); color: var(--success); background: #F0FDF4; }
+    .done-toggle.active { border-color: var(--success); background: var(--success); color: white; }
+    .done-toggle .check-icon { font-size: 14px; }
+
+    /* ── COMPLETE BANNER ── */
+    .complete-banner {
+      display: none;
+      background: linear-gradient(135deg, #064E3B, #065F46);
+      border-radius: 16px;
+      padding: 28px 24px; text-align: center; margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+    }
+    .complete-banner.show { display: block; animation: fadeSlide 0.5s ease; }
+    .complete-banner .emoji { font-size: 40px; margin-bottom: 10px; }
+    .complete-banner h2 { font-size: 22px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px; }
+    .complete-banner p { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px; }
+    .complete-banner .back-home-btn {
+      display: inline-block;
+      background: white; color: #065F46;
+      padding: 10px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .complete-banner .back-home-btn:hover { background: #D1FAE5; }
+  </style>
+</head>
+<body>
+
+<!-- STICKY TOPBAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="back-btn">← 대시보드</a>
+    <a href="wrongnote.html?unit=u02" class="wrong-note-btn" id="wrong-note-btn" style="display:none">
+      ✕ 오답노트 <span class="wn-cnt" id="wrong-note-cnt">0</span>
+    </a>
+    <div class="topbar-info">
+      <div class="topbar-unit-label">1과목 CHAPTER 01 · UNIT 02</div>
+      <div class="topbar-title">데이터베이스와 DBMS의 이해</div>
+    </div>
+    <button class="reset-btn" onclick="resetQuiz()" title="풀이 초기화">↺ 초기화</button>
+    <div class="topbar-progress">
+      <span class="count" id="done-count">0</span><span>/17</span>
+      <div class="topbar-progbar-bg">
+        <div class="topbar-progbar-fill" id="top-progbar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🗄️ 1과목 · UNIT 02</div>
+    <h1>데이터베이스와 DBMS의 이해</h1>
+    <p>DB 특징 · DBMS 유형 · NoSQL · DB 설계 절차 · 무결성</p>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="complete-banner" id="complete-banner">
+    <div class="emoji">🎉</div>
+    <h2>Unit 02 완료!</h2>
+    <p>17개 문제를 모두 학습했습니다. 수고하셨습니다!</p>
+    <a href="index.html" class="back-home-btn">← 대시보드로 돌아가기</a>
+  </div>
+  <div id="quiz-container"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  QUESTIONS DATA
+// ─────────────────────────────────────────────
+const UNIT_ID = 'u02';
+const TOTAL = 17;
+
+const questions = [
+  {
+    id: 1,
+    text: '다음 중 데이터베이스 특징에 대한 설명으로 적절하지 않은 것은?',
+    difficulty: '하',
+    keywords: ['데이터베이스특징', '통합데이터', '공용데이터'],
+    options: [
+      '데이터베이스는 통합된 데이터이다. 이것은 데이터베이스에서 같은 내용의 데이터가 중복되어 있지 않다는 것을 의미한다.',
+      '데이터베이스는 저장된 데이터이다. 이것은 자기디스크나 자기테이프 등과 같이 컴퓨터가 접근할 수 있는 저장매체에 저장되는 것을 의미한다.',
+      '데이터베이스는 공용 데이터이다. 이것은 여러 사용자에게 서로 다른 목적으로 데이터베이스의 데이터를 공동으로 이용되는 것을 의미한다.',
+      '데이터베이스는 변화되는 데이터이다. 이것은 저장된 정량적 데이터 상태로 유지됨을 의미한다.'
+    ],
+    answer: 4,
+    explanation: '변화되는 데이터는 항상 갱신되며 최신 상태를 유지해야 한다는 의미이지, 정적인 상태를 의미하지 않는다.'
+  },
+  {
+    id: 2,
+    text: '다음 중 데이터베이스의 일반적인 특징으로 옳지 않은 것은?',
+    difficulty: '하',
+    keywords: ['DB특징', 'Integrated Stored Shared Changed'],
+    options: [
+      'Unchanged Data',
+      'Stored Data',
+      'Shared Data',
+      'Integrated Data'
+    ],
+    answer: 1,
+    explanation: '데이터베이스 특징은 Integrated(통합), Stored(저장), Shared(공용), Changed(변화)이며 Unchanged는 해당하지 않는다.'
+  },
+  {
+    id: 3,
+    text: '다음 중 데이터베이스의 특징으로 옳지 않은 것은?',
+    difficulty: '하',
+    keywords: ['DB특징', '정형비정형', '데이터저장'],
+    options: [
+      'USB 등 컴퓨터가 접근할 수 있는 저장 매체에 저장할 수 있다.',
+      '데이터는 공동으로 이용된다.',
+      '데이터베이스에는 정형 데이터만 저장할 수 있다.',
+      '데이터베이스에는 데이터가 중복되어 있지 않다.'
+    ],
+    answer: 3,
+    explanation: '현대 데이터베이스는 정형뿐 아니라 비정형 데이터도 저장할 수 있다.'
+  },
+  {
+    id: 4,
+    text: '다음 중 데이터베이스의 일반적인 특징으로 옳지 않은 것은?',
+    difficulty: '중',
+    keywords: ['DB특징', '비정형데이터', '데이터관리'],
+    options: [
+      '데이터베이스는 새로운 데이터의 삽입, 기존 데이터의 삭제, 갱신으로 항상 변화하면서도 항상 현재의 정확한 데이터를 유지한다.',
+      '데이터베이스에서 동일한 내용의 데이터가 중복되어 있지 않다는 것을 의미한다.',
+      '여러 사용자가 서로 다른 목적으로 데이터베이스의 데이터를 공동으로 이용한다.',
+      '데이터베이스는 컴퓨터가 접근할 수 있는 저장 매체에 정형화된 데이터만 저장한다.'
+    ],
+    answer: 4,
+    explanation: '데이터베이스는 정형 데이터뿐 아니라 비정형 데이터도 저장 가능하다.'
+  },
+  {
+    id: 5,
+    text: '다음 중 데이터베이스의 특징에 대한 설명으로 적절하지 않은 것은?',
+    difficulty: '중',
+    keywords: ['DB특징', '응용프로그램독립성'],
+    options: [
+      '공동 접근 가능',
+      '데이터가 중복되지 않음',
+      '응용 프로그램 종속성',
+      '새로운 데이터의 추가, 기존 데이터의 삭제, 갱신으로 항상 변화함'
+    ],
+    answer: 3,
+    explanation: '데이터베이스는 응용 프로그램과 독립성을 가지며 종속적이지 않다.'
+  },
+  {
+    id: 6,
+    text: '다음 중 데이터베이스의 특징에 대한 설명으로 옳지 않은 것은?',
+    difficulty: '중',
+    keywords: ['DB특징', '공용데이터', '통합데이터'],
+    options: [
+      '공용 데이터 : 동일한 목적으로 공동 이용한다.',
+      '변화되는 데이터 : 항상 최신 상태를 유지한다.',
+      '저장된 데이터 : 컴퓨터가 접근 가능한 저장매체에 저장된다.',
+      '통합된 데이터 : 동일 데이터의 중복이 없다.'
+    ],
+    answer: 1,
+    explanation: '공용 데이터는 여러 사용자가 서로 다른 목적을 위해 데이터를 공동으로 사용하는 것을 의미한다. \'동일한 목적\'이 아니다.'
+  },
+  {
+    id: 7,
+    text: '다음 중 정보 관리적 측면에서의 데이터베이스를 설명한 것으로 옳은 것은?',
+    difficulty: '중',
+    keywords: ['정보관리', 'DB특징', '데이터관리'],
+    options: [
+      '데이터 관리 목적에 따라 소비자가 저렴하게 사용할 수 있다.',
+      '정보 체계 관리를 통해 새로운 정보를 축적하고, 관리 용이성을 높이며, 데이터의 저장 및 추가에 활용될 수 있다.',
+      '데이터를 계층형으로 구조화하여 데이터의 검색을 쉽게 할 수 있다.',
+      '다양한 권한 관리 기능을 통해 보안성을 강화한다.'
+    ],
+    answer: 2,
+    explanation: '정보 관리 측면은 데이터의 체계적 관리, 축적, 유지 및 활용의 용이성에 초점을 둔다.'
+  },
+  {
+    id: 8,
+    text: '다음 중 데이터베이스의 정보 축적 및 정보 전달 측면의 특징으로 옳지 않은 것은?',
+    difficulty: '중',
+    keywords: ['정보전달', 'DB특징', '확장성'],
+    options: [
+      '기계가독성: 컴퓨터가 해석 가능한 형태로 저장된다.',
+      '검색가능성: 다양한 조건으로 신속하게 검색 가능하다.',
+      '원격조작성: 네트워크를 통해 원격 접근 가능하다.',
+      '한 번 구축되면 이후 변경이 불가능하다.'
+    ],
+    answer: 4,
+    explanation: '데이터베이스는 기술 발전에 따라 구조와 환경을 변경 및 확장할 수 있다.'
+  },
+  {
+    id: 9,
+    text: '이용자가 필요한 정보를 신속하고 정확하게 찾기 위해 가장 중요한 측면은?',
+    difficulty: '하',
+    keywords: ['정보이용', '검색', '사용자관점'],
+    options: [
+      '정보 이용 측면',
+      '정보 관리 측면',
+      '정보 기술 발전 측면',
+      '경제 산업 측면'
+    ],
+    answer: 1,
+    explanation: '사용자의 입장에서 빠르고 정확한 정보 접근을 지원하는 것은 정보 이용 측면이다.'
+  },
+  {
+    id: 10,
+    text: '사용자 요구에 따라 데이터를 처리하고 데이터베이스를 관리하는 소프트웨어는?',
+    difficulty: '하',
+    keywords: ['DBMS', '데이터관리'],
+    options: [
+      'DBMS',
+      'Data Dictionary',
+      'SQL',
+      'Metadata'
+    ],
+    answer: 1,
+    explanation: 'DBMS(Database Management System)는 데이터베이스를 관리하고 사용자 요청을 처리하는 핵심 시스템이다.'
+  },
+  {
+    id: 11,
+    text: '복잡한 데이터 구조를 표현 및 관리하는 DBMS는?',
+    difficulty: '하',
+    keywords: ['ODBMS', 'DB종류'],
+    options: [
+      'RDBMS',
+      'ODBMS',
+      '데이터 사전',
+      'SQL'
+    ],
+    answer: 2,
+    explanation: 'ODBMS(Object-Oriented DBMS)는 객체 지향 데이터 구조를 관리한다.'
+  },
+  {
+    id: 12,
+    text: '객체 기반 계층 구조 데이터 관리를 수행하는 DBMS는?',
+    difficulty: '중',
+    keywords: ['ODBMS', '객체지향DB'],
+    options: [
+      'ODBMS',
+      'MySQL',
+      'RDBMS',
+      'OS'
+    ],
+    answer: 1,
+    explanation: '객체 간 상속 및 계층 구조를 지원하는 DBMS는 ODBMS이다.'
+  },
+  {
+    id: 13,
+    text: '다음 중 DBMS 설명으로 옳지 않은 것은?',
+    difficulty: '중',
+    keywords: ['DBMS', '한계'],
+    options: [
+      '동시 사용자 처리 가능',
+      '일반적으로 관계형 DBMS 사용',
+      '모든 데이터 문제 해결 가능',
+      '사용자 접근 가능'
+    ],
+    answer: 3,
+    explanation: 'DBMS는 모든 문제를 해결하지 못하며 한계를 가진다.'
+  },
+  {
+    id: 14,
+    text: '다음 중 NoSQL과 관련 없는 것은?',
+    difficulty: '하',
+    keywords: ['NoSQL', 'RDBMS'],
+    options: [
+      'MongoDB',
+      'HBase',
+      'Redis',
+      'MySQL'
+    ],
+    answer: 4,
+    explanation: 'MySQL은 관계형 데이터베이스(RDBMS)이며 NoSQL이 아니다. MongoDB, HBase, Redis는 NoSQL DB이다.'
+  },
+  {
+    id: 15,
+    text: '데이터베이스 설계 절차 순서는?',
+    difficulty: '중',
+    keywords: ['DB설계', '절차'],
+    options: [
+      '요구조건분석 → 개념적 설계 → 논리적 설계 → 물리적 설계',
+      '개념 → 요구 → 논리 → 물리',
+      '논리 → 요구 → 개념 → 물리',
+      '개념 → 물리 → 요구 → 논리'
+    ],
+    answer: 1,
+    explanation: '표준 DB 설계 흐름: 요구조건분석 → 개념적 설계(ERD) → 논리적 설계(정규화) → 물리적 설계(인덱스, 파티션 등).'
+  },
+  {
+    id: 16,
+    text: '데이터의 일관성과 정확성을 유지하는 특성은?',
+    difficulty: '중',
+    keywords: ['무결성', 'DB특성'],
+    options: [
+      '가용성',
+      '무결성',
+      '효율성',
+      '기밀성'
+    ],
+    answer: 2,
+    explanation: '무결성(Integrity)은 데이터의 정확성과 일관성을 보장하는 특성이다.'
+  },
+  {
+    id: 17,
+    text: '다음 중 상용 DB가 아닌 것은?',
+    difficulty: '하',
+    keywords: ['DB종류', 'BI툴'],
+    options: [
+      'DB2',
+      'Tableau',
+      'SQL Server',
+      'Oracle'
+    ],
+    answer: 2,
+    explanation: 'Tableau는 데이터 시각화/BI 도구이며 데이터베이스 관리 시스템(DBMS)이 아니다.'
+  }
+];
+
+// ─────────────────────────────────────────────
+//  STATE & STORAGE
+// ─────────────────────────────────────────────
+const STORAGE_KEY = 'adsp_progress';
+const Q_STATE_KEY = 'adsp_u02_q';
+
+function getProgress() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+function getQState() {
+  try { return JSON.parse(localStorage.getItem(Q_STATE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveQState(s) { localStorage.setItem(Q_STATE_KEY, JSON.stringify(s)); }
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+const OPTS = ['①', '②', '③', '④'];
+const DIFF_CLASS = { '하': 'chip-diff-low', '중': 'chip-diff-mid', '상': 'chip-diff-high' };
+const DIFF_TEXT = { '하': '하(쉬움)', '중': '중(보통)', '상': '상(어려움)' };
+
+function renderAll() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  const qState = getQState();
+  const progress = getProgress();
+
+  questions.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${q.id}`;
+
+    const isDone = !!progress[`u02_q${q.id}`];
+    const answered = qState[`q${q.id}`];
+
+    if (answered) {
+      card.classList.add(answered === q.answer ? 'answered-correct' : 'answered-wrong');
+    }
+
+    const kwHtml = q.keywords.map(k => `<span class="chip chip-kw">#${k}</span>`).join('');
+    const doneBadge = isDone ? '<span class="chip chip-done">✓ 완료</span>' : '';
+
+    card.innerHTML = `
+      <div class="q-header">
+        <div class="q-num-badge">${q.id}</div>
+        <div class="q-meta">
+          <div class="q-chips">
+            <span class="chip ${DIFF_CLASS[q.difficulty]}">${DIFF_TEXT[q.difficulty]}</span>
+            ${kwHtml}
+            ${doneBadge}
+          </div>
+        </div>
+      </div>
+      <div class="q-text">${q.text.replace(/\n/g, '<br>')}</div>
+      <div class="q-options" id="opts-${q.id}">
+        ${q.options.map((opt, i) => `
+          <button class="opt-btn" data-idx="${i+1}" onclick="selectOption(${q.id}, ${i+1})" ${answered ? 'disabled' : ''}>
+            <span class="opt-num">${OPTS[i]}</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="q-explanation ${answered ? 'show' : ''}" id="exp-${q.id}">
+        <div class="explanation-label">📖 해설</div>
+        <div class="explanation-text">${q.explanation.replace(/\n/g, '<br>')}</div>
+      </div>
+      <div class="q-footer">
+        <button class="done-toggle ${isDone ? 'active' : ''}" id="done-btn-${q.id}" onclick="toggleDone(${q.id})">
+          <span class="check-icon">${isDone ? '✓' : '○'}</span>
+          <span>${isDone ? '완료됨' : '완료 표시'}</span>
+        </button>
+      </div>`;
+
+    if (answered) {
+      const optsDiv = card.querySelector(`#opts-${q.id}`);
+      optsDiv.querySelectorAll('.opt-btn').forEach(btn => {
+        const idx = parseInt(btn.dataset.idx);
+        if (idx === q.answer) btn.classList.add('show-correct');
+        else if (idx === answered && answered !== q.answer) btn.classList.add('wrong');
+        btn.disabled = true;
+      });
+    }
+
+    container.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+function selectOption(qId, idx) {
+  const q = questions.find(x => x.id === qId);
+  const qState = getQState();
+  qState[`q${qId}`] = idx;
+  saveQState(qState);
+
+  const card = document.getElementById(`qcard-${qId}`);
+  const optsDiv = document.getElementById(`opts-${qId}`);
+  const expDiv = document.getElementById(`exp-${qId}`);
+
+  const isCorrect = idx === q.answer;
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  optsDiv.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.disabled = true;
+    const bIdx = parseInt(btn.dataset.idx);
+    if (bIdx === q.answer) btn.classList.add('show-correct');
+    else if (bIdx === idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  expDiv.classList.add('show');
+
+  if (isCorrect) {
+    const p = getProgress();
+    p[`u02_q${qId}`] = true;
+    saveProgress(p);
+    const doneBtn = document.getElementById(`done-btn-${qId}`);
+    doneBtn.classList.add('active');
+    doneBtn.innerHTML = '<span class="check-icon">✓</span><span>완료됨</span>';
+    const meta = card.querySelector('.q-meta .q-chips');
+    if (!meta.querySelector('.chip-done')) {
+      meta.insertAdjacentHTML('beforeend', '<span class="chip chip-done">✓ 완료</span>');
+    }
+  }
+
+  updateProgress();
+}
+
+function toggleDone(qId) {
+  const p = getProgress();
+  const key = `u02_q${qId}`;
+  p[key] = !p[key];
+  saveProgress(p);
+
+  const isDone = p[key];
+  const doneBtn = document.getElementById(`done-btn-${qId}`);
+  doneBtn.classList.toggle('active', isDone);
+  doneBtn.innerHTML = `<span class="check-icon">${isDone ? '✓' : '○'}</span><span>${isDone ? '완료됨' : '완료 표시'}</span>`;
+
+  const card = document.getElementById(`qcard-${qId}`);
+  const meta = card.querySelector('.q-meta .q-chips');
+  const existing = meta.querySelector('.chip-done');
+  if (isDone && !existing) {
+    meta.insertAdjacentHTML('beforeend', '<span class="chip chip-done">✓ 완료</span>');
+  } else if (!isDone && existing) {
+    existing.remove();
+  }
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const p = getProgress();
+  let done = 0;
+  for (let i = 1; i <= TOTAL; i++) if (p[`u02_q${i}`]) done++;
+
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('top-progbar').style.width = (done / TOTAL * 100) + '%';
+
+  // Update wrong note button
+  const qState = getQState();
+  let wrongCnt = 0;
+  for (let i = 1; i <= TOTAL; i++) {
+    const sel = qState[`q${i}`];
+    if (sel !== undefined && sel !== null && sel !== questions[i-1].answer) wrongCnt++;
+  }
+  const wnBtn = document.getElementById('wrong-note-btn');
+  const wnCnt = document.getElementById('wrong-note-cnt');
+  if (wrongCnt > 0) {
+    wnCnt.textContent = wrongCnt;
+    wnBtn.style.display = 'flex';
+  } else {
+    wnBtn.style.display = 'none';
+  }
+
+  if (done === TOTAL) {
+    p['u02'] = true;
+    saveProgress(p);
+    document.getElementById('complete-banner').classList.add('show');
+    document.getElementById('complete-banner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    document.getElementById('complete-banner').classList.remove('show');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESET
+// ─────────────────────────────────────────────
+function resetQuiz() {
+  if (!confirm('Unit 02의 모든 풀이 기록을 초기화하시겠습니까?\n(진행률과 오답 기록이 모두 삭제됩니다)')) return;
+
+  // Clear question answers
+  localStorage.removeItem(Q_STATE_KEY);
+
+  // Clear per-question completion flags and unit flag from progress
+  const p = getProgress();
+  for (let i = 1; i <= TOTAL; i++) delete p[`u02_q${i}`];
+  delete p['u02'];
+  saveProgress(p);
+
+  // Clear retry records for this unit
+  try {
+    const retry = JSON.parse(localStorage.getItem('adsp_retry') || '{}');
+    for (let i = 1; i <= TOTAL; i++) delete retry[`u02_q${i}`];
+    localStorage.setItem('adsp_retry', JSON.stringify(retry));
+  } catch {}
+
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>

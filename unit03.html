@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 03 - 데이터베이스와 SQL 기초 | ADsP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3B82F6;
+      --primary-light: #EFF6FF;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --bg: #F0F4F8;
+      --surface: #FFFFFF;
+      --border: #E2E8F0;
+      --text1: #1A202C;
+      --text2: #4A5568;
+      --text3: #718096;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text1);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── STICKY TOP BAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 12px 20px;
+    }
+    .topbar-inner {
+      max-width: 720px; margin: 0 auto;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+      font-size: 13px; font-weight: 600;
+      color: var(--text2); cursor: pointer;
+      font-family: inherit; text-decoration: none;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .wrong-note-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: #FEF2F2; border: 1.5px solid #FCA5A5;
+      border-radius: 8px; padding: 6px 11px;
+      font-size: 12px; font-weight: 700; color: var(--danger);
+      text-decoration: none; transition: all 0.2s; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .wrong-note-btn:hover { background: #FEE2E2; border-color: var(--danger); }
+    .wrong-note-btn .wn-cnt {
+      background: var(--danger); color: white;
+      border-radius: 10px; padding: 1px 6px;
+      font-size: 11px; font-weight: 800;
+    }
+    .reset-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 11px;
+      font-size: 12px; font-weight: 600;
+      color: var(--text3); cursor: pointer;
+      font-family: inherit; transition: all 0.2s; flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .reset-btn:hover { border-color: var(--danger); color: var(--danger); background: #FEF2F2; }
+    .topbar-info { flex: 1; min-width: 0; }
+    .topbar-unit-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--primary); letter-spacing: 0.5px; margin-bottom: 1px;
+    }
+    .topbar-title {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar-progress {
+      text-align: right; flex-shrink: 0;
+      font-size: 12px; font-weight: 700;
+      color: var(--text2);
+    }
+    .topbar-progress .count { font-size: 20px; color: var(--primary); }
+    .topbar-progbar-bg {
+      background: #E2E8F0; border-radius: 4px; height: 5px;
+      overflow: hidden; margin-top: 4px; min-width: 80px;
+    }
+    .topbar-progbar-fill {
+      height: 100%; background: var(--primary); border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%);
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 11px; font-weight: 600; color: #BFDBFE;
+      letter-spacing: 0.6px; margin-bottom: 10px;
+    }
+    .hero h1 { font-size: 20px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px; }
+    .hero p { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+    /* ── CONTENT ── */
+    .content { max-width: 720px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ── QUESTION CARD ── */
+    .q-card {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .q-card.answered-correct { border-color: var(--success); }
+    .q-card.answered-wrong { border-color: var(--danger); }
+
+    .q-header {
+      padding: 16px 20px 12px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .q-num-badge {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--primary-light); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; flex-shrink: 0;
+    }
+    .q-card.answered-correct .q-num-badge { background: #D1FAE5; color: var(--success); }
+    .q-card.answered-wrong .q-num-badge { background: #FEE2E2; color: var(--danger); }
+
+    .q-meta { flex: 1; }
+    .q-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .chip {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 5px;
+    }
+    .chip-diff-low { background: #D1FAE5; color: #065F46; }
+    .chip-diff-mid { background: #FEF3C7; color: #92400E; }
+    .chip-diff-high { background: #FEE2E2; color: #991B1B; }
+    .chip-kw { background: #EFF6FF; color: #1D4ED8; }
+    .chip-done { background: #D1FAE5; color: #065F46; }
+
+    .q-text {
+      padding: 0 20px 14px;
+      font-size: 15px; font-weight: 600; line-height: 1.6;
+      color: var(--text1);
+    }
+
+    /* ── QUESTION IMAGE ── */
+    .q-image {
+      padding: 0 20px 14px;
+      text-align: center;
+    }
+    .q-image img {
+      max-width: 100%; border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .q-image-placeholder {
+      display: inline-block;
+      background: #F8FAFC; border: 1.5px dashed var(--border);
+      border-radius: 8px; padding: 20px 32px;
+      font-size: 12px; color: var(--text3);
+    }
+
+    /* ── OPTIONS ── */
+    .q-options { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .opt-btn {
+      display: flex; align-items: flex-start; gap: 10px;
+      width: 100%; padding: 11px 14px;
+      background: #F8FAFC; border: 1.5px solid var(--border);
+      border-radius: 10px; cursor: pointer;
+      font-family: inherit; font-size: 13.5px; font-weight: 500;
+      color: var(--text1); text-align: left;
+      transition: all 0.2s;
+    }
+    .opt-btn:hover:not(:disabled) {
+      background: var(--primary-light); border-color: var(--primary);
+      color: var(--primary);
+    }
+    .opt-btn:disabled { cursor: default; }
+    .opt-num {
+      width: 24px; height: 24px; border-radius: 6px;
+      background: var(--border); color: var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .opt-btn.correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-btn.correct .opt-num { background: var(--success); color: white; }
+    .opt-btn.wrong { background: #FEE2E2; border-color: var(--danger); color: #991B1B; }
+    .opt-btn.wrong .opt-num { background: var(--danger); color: white; }
+    .opt-btn.show-correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+    .opt-btn.show-correct .opt-num { background: var(--success); color: white; }
+
+    /* ── EXPLANATION ── */
+    .q-explanation {
+      display: none;
+      margin: 0 20px 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #EFF6FF, #F0FDF4);
+      border-radius: 10px;
+      border-left: 4px solid var(--primary);
+    }
+    .q-explanation.show { display: block; animation: fadeSlide 0.3s ease; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .explanation-label {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+    .explanation-text {
+      font-size: 13px; line-height: 1.65; color: var(--text2);
+    }
+
+    /* ── MARK DONE ── */
+    .q-footer {
+      padding: 0 20px 16px;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
+    .done-toggle {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 7px 12px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      color: var(--text3); cursor: pointer; transition: all 0.2s;
+    }
+    .done-toggle:hover { border-color: var(--success); color: var(--success); background: #F0FDF4; }
+    .done-toggle.active { border-color: var(--success); background: var(--success); color: white; }
+    .done-toggle .check-icon { font-size: 14px; }
+
+    /* ── COMPLETE BANNER ── */
+    .complete-banner {
+      display: none;
+      background: linear-gradient(135deg, #064E3B, #065F46);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+    }
+    .complete-banner.show { display: block; animation: fadeSlide 0.5s ease; }
+    .complete-banner .emoji { font-size: 40px; margin-bottom: 10px; }
+    .complete-banner h2 { font-size: 22px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px; }
+    .complete-banner p { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px; }
+    .complete-banner .back-home-btn {
+      display: inline-block;
+      background: white; color: #065F46;
+      padding: 10px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .complete-banner .back-home-btn:hover { background: #D1FAE5; }
+  </style>
+</head>
+<body>
+
+<!-- STICKY TOPBAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="back-btn">← 대시보드</a>
+    <a href="wrongnote.html?unit=u03" class="wrong-note-btn" id="wrong-note-btn" style="display:none">
+      ✕ 오답노트 <span class="wn-cnt" id="wrong-note-cnt">0</span>
+    </a>
+    <div class="topbar-info">
+      <div class="topbar-unit-label">1과목 CHAPTER 01 · UNIT 03</div>
+      <div class="topbar-title">데이터베이스와 SQL 기초</div>
+    </div>
+    <button class="reset-btn" onclick="resetQuiz()" title="풀이 초기화">↺ 초기화</button>
+    <div class="topbar-progress">
+      <span class="count" id="done-count">0</span><span>/7</span>
+      <div class="topbar-progbar-bg">
+        <div class="topbar-progbar-fill" id="top-progbar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🗄️ 1과목 · UNIT 03</div>
+    <h1>데이터베이스와 SQL 기초</h1>
+    <p>관계 모델 · DB 구성요소 · SQL(DML/DDL) · 집계 함수</p>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="complete-banner" id="complete-banner">
+    <div class="emoji">🎉</div>
+    <h2>Unit 03 완료!</h2>
+    <p>7개 문제를 모두 학습했습니다. 수고하셨습니다!</p>
+    <a href="index.html" class="back-home-btn">← 대시보드로 돌아가기</a>
+  </div>
+  <div id="quiz-container"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  QUESTIONS DATA
+// ─────────────────────────────────────────────
+const UNIT_ID = 'u03';
+const TOTAL = 7;
+
+const questions = [
+  {
+    id: 1,
+    text: '다음은 고객과 상품의 대응관계를 도식화 한 것이다. 대응비 관점에서 고객과 상품 간의 관계가 옳은 것은?',
+    difficulty: '하',
+    keywords: ['관계모델', '카디널리티', 'N대1'],
+    image: 'img/unit03_q1_diagram.png',
+    options: ['1:1', '1:N', 'N:1', 'N:M'],
+    answer: 3,
+    explanation: '여러 고객이 하나의 상품에 연결되는 구조이므로 N:1 관계이다.'
+  },
+  {
+    id: 2,
+    text: '다음 중 데이터베이스 구성요소에 대한 올바른 설명으로 짝지어진 것은?\n\n- 메타데이터 : 데이터에 관한 구조화된 데이터로, 다른 데이터를 설명해 주는 데이터\n- 인덱스 : 데이터베이스 분야에 있어서 테이블에 대한 동작의 속도를 높여주는 자료 구조\n- 데이터 사전 : 사용자의 의사결정에 도움을 주기 위해 기관 시스템의 데이터베이스에 축적된 데이터를 공통의 형식으로 변환해서 관리하는 데이터베이스\n- 어트리뷰트 : 테이블의 행을 의미함',
+    difficulty: '중',
+    keywords: ['메타데이터', '인덱스', '데이터사전', '속성'],
+    options: ['메타데이터, 인덱스', '어트리뷰트, 인덱스', '인덱스, 데이터사전', '메타데이터, 데이터사전'],
+    answer: 1,
+    explanation: '메타데이터와 인덱스의 설명은 올바르다.\n- 데이터 사전은 자료에 대한 정보를 저장하는 저장소이며, 제시된 설명은 데이터 웨어하우스에 가깝다.\n- 어트리뷰트는 테이블의 \'열(Column)\'을 의미하므로 제시된 설명은 틀리다.'
+  },
+  {
+    id: 3,
+    text: '다음은 데이터베이스의 구성요소에 대한 설명이다. 각각 무엇에 대한 설명인가?\n\n가. 데이터를 설명해주는 데이터로 데이터의 특성, 구조, 정의 및 관리 정보를 설명하는 데이터\n나. 데이터를 빠르고 쉽게 찾을 수 있게 해주는 자료 구조',
+    difficulty: '하',
+    keywords: ['메타데이터', '인덱스'],
+    options: ['(가) 테이블, (나) 인덱스', '(가) 메타데이터, (나) 인덱스', '(가) 메타데이터, (나) 속성', '(가) 테이블, (나) 속성'],
+    answer: 2,
+    explanation: '가 → 메타데이터: 데이터의 구조, 정의, 관리 정보를 설명하는 데이터\n나 → 인덱스: 데이터 검색 속도를 향상시키는 자료 구조'
+  },
+  {
+    id: 4,
+    text: '다음 SQL의 명령어 중 DML이 아닌 것은 무엇인가?\n\n가 - SELECT　　나 - UPDATE　　다 - INSERT　　라 - DELETE　　마 - CREATE',
+    difficulty: '하',
+    keywords: ['SQL', 'DML', 'DDL'],
+    options: ['가, 나', '다', '라', '마'],
+    answer: 4,
+    explanation: 'DML(Data Manipulation Language): SELECT, UPDATE, INSERT, DELETE\n- DDL(Data Definition Language): CREATE, DROP, ALTER\n따라서 CREATE는 DML이 아니라 DDL이다.'
+  },
+  {
+    id: 5,
+    text: '다음 중 관계형 데이터베이스 관리 시스템(RDBMS)의 데이터를 관리하기 위해 설계된 특수 목적의 프로그래밍 언어로, 챔벌린과 보이스가 개발한 프로그래밍 언어는?',
+    difficulty: '하',
+    keywords: ['SQL', 'RDBMS'],
+    options: ['C', 'PYTHON', 'SQL', 'SPSS'],
+    answer: 3,
+    explanation: 'SQL은 RDBMS의 데이터를 정의, 조작, 제어하기 위한 특수 목적 언어이다.'
+  },
+  {
+    id: 6,
+    text: '테이블명(My_Table)에서 나이(AGE)가 20~25살 까지의 사원을 조회하는 SQL을 작성하려고 한다. 다음 보기의 빈칸에 들어갈 내용으로 적절한 것은?\n\nSELECT * FROM My_Table WHERE AGE (   ) 20 AND 25;',
+    difficulty: '하',
+    keywords: ['SQL', 'WHERE', 'BETWEEN'],
+    options: ['HAVING', 'BETWEEN', 'TO', 'OR'],
+    answer: 2,
+    explanation: 'SELECT * FROM My_Table WHERE AGE BETWEEN 20 AND 25;\n→ AGE 값이 20 이상 25 이하인 데이터를 조회한다.'
+  },
+  {
+    id: 7,
+    text: 'SQL의 SELECT 문에서만 사용 가능한 집계 함수로, 데이터 타입에 무관하게 사용 가능한 함수는?',
+    difficulty: '중',
+    keywords: ['집계함수', 'COUNT'],
+    options: ['COUNT', 'MIN', 'SUM', 'AVG'],
+    answer: 1,
+    explanation: '- COUNT: 데이터 타입에 관계없이 사용 가능\n- SUM, MIN, MAX, AVG: 주로 숫자형 데이터에 사용'
+  }
+];
+
+// ─────────────────────────────────────────────
+//  STATE & STORAGE
+// ─────────────────────────────────────────────
+const STORAGE_KEY = 'adsp_progress';
+const Q_STATE_KEY = 'adsp_u03_q';
+
+function getProgress() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+function getQState() {
+  try { return JSON.parse(localStorage.getItem(Q_STATE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveQState(s) { localStorage.setItem(Q_STATE_KEY, JSON.stringify(s)); }
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+const OPTS = ['①', '②', '③', '④'];
+const DIFF_CLASS = { '하': 'chip-diff-low', '중': 'chip-diff-mid', '상': 'chip-diff-high' };
+const DIFF_TEXT  = { '하': '하(쉬움)', '중': '중(보통)', '상': '상(어려움)' };
+
+function renderAll() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  const qState   = getQState();
+  const progress = getProgress();
+
+  questions.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${q.id}`;
+
+    const isDone   = !!progress[`u03_q${q.id}`];
+    const answered = qState[`q${q.id}`];
+
+    if (answered) {
+      card.classList.add(answered === q.answer ? 'answered-correct' : 'answered-wrong');
+    }
+
+    const kwHtml    = q.keywords.map(k => `<span class="chip chip-kw">#${k}</span>`).join('');
+    const doneBadge = isDone ? '<span class="chip chip-done">✓ 완료</span>' : '';
+
+    const imageHtml = q.image
+      ? `<div class="q-image">
+           <img src="${q.image}" alt="문제 ${q.id} 다이어그램"
+                onerror="this.parentElement.innerHTML='<div class=\\'q-image-placeholder\\'>🖼️ 이미지를 불러올 수 없습니다<br><small>${q.image}</small></div>'">
+         </div>`
+      : '';
+
+    card.innerHTML = `
+      <div class="q-header">
+        <div class="q-num-badge">${q.id}</div>
+        <div class="q-meta">
+          <div class="q-chips">
+            <span class="chip ${DIFF_CLASS[q.difficulty]}">${DIFF_TEXT[q.difficulty]}</span>
+            ${kwHtml}
+            ${doneBadge}
+          </div>
+        </div>
+      </div>
+      <div class="q-text">${q.text.replace(/\n/g, '<br>')}</div>
+      ${imageHtml}
+      <div class="q-options" id="opts-${q.id}">
+        ${q.options.map((opt, i) => `
+          <button class="opt-btn" data-idx="${i+1}" onclick="selectOption(${q.id}, ${i+1})" ${answered ? 'disabled' : ''}>
+            <span class="opt-num">${OPTS[i]}</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="q-explanation ${answered ? 'show' : ''}" id="exp-${q.id}">
+        <div class="explanation-label">📖 해설</div>
+        <div class="explanation-text">${q.explanation.replace(/\n/g, '<br>')}</div>
+      </div>
+      <div class="q-footer">
+        <button class="done-toggle ${isDone ? 'active' : ''}" id="done-btn-${q.id}" onclick="toggleDone(${q.id})">
+          <span class="check-icon">${isDone ? '✓' : '○'}</span>
+          <span>${isDone ? '완료됨' : '완료 표시'}</span>
+        </button>
+      </div>`;
+
+    // Restore answered state styling
+    if (answered) {
+      const optsDiv = card.querySelector(`#opts-${q.id}`);
+      optsDiv.querySelectorAll('.opt-btn').forEach(btn => {
+        const idx = parseInt(btn.dataset.idx);
+        if (idx === q.answer) btn.classList.add('show-correct');
+        else if (idx === answered && answered !== q.answer) btn.classList.add('wrong');
+        btn.disabled = true;
+      });
+    }
+
+    container.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+function selectOption(qId, idx) {
+  const q = questions.find(x => x.id === qId);
+  const qState = getQState();
+  qState[`q${qId}`] = idx;
+  saveQState(qState);
+
+  const card    = document.getElementById(`qcard-${qId}`);
+  const optsDiv = document.getElementById(`opts-${qId}`);
+  const expDiv  = document.getElementById(`exp-${qId}`);
+
+  const isCorrect = idx === q.answer;
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  optsDiv.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.disabled = true;
+    const bIdx = parseInt(btn.dataset.idx);
+    if (bIdx === q.answer) btn.classList.add('show-correct');
+    else if (bIdx === idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  expDiv.classList.add('show');
+
+  if (isCorrect) {
+    const p = getProgress();
+    p[`u03_q${qId}`] = true;
+    saveProgress(p);
+    const doneBtn = document.getElementById(`done-btn-${qId}`);
+    doneBtn.classList.add('active');
+    doneBtn.innerHTML = '<span class="check-icon">✓</span><span>완료됨</span>';
+    const meta = card.querySelector('.q-meta .q-chips');
+    if (!meta.querySelector('.chip-done')) {
+      meta.insertAdjacentHTML('beforeend', '<span class="chip chip-done">✓ 완료</span>');
+    }
+  }
+
+  updateProgress();
+}
+
+function toggleDone(qId) {
+  const p = getProgress();
+  const key = `u03_q${qId}`;
+  p[key] = !p[key];
+  saveProgress(p);
+
+  const isDone  = p[key];
+  const doneBtn = document.getElementById(`done-btn-${qId}`);
+  doneBtn.classList.toggle('active', isDone);
+  doneBtn.innerHTML = `<span class="check-icon">${isDone ? '✓' : '○'}</span><span>${isDone ? '완료됨' : '완료 표시'}</span>`;
+
+  const card = document.getElementById(`qcard-${qId}`);
+  const meta = card.querySelector('.q-meta .q-chips');
+  const existing = meta.querySelector('.chip-done');
+  if (isDone && !existing) {
+    meta.insertAdjacentHTML('beforeend', '<span class="chip chip-done">✓ 완료</span>');
+  } else if (!isDone && existing) {
+    existing.remove();
+  }
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const p = getProgress();
+  let done = 0;
+  for (let i = 1; i <= TOTAL; i++) if (p[`u03_q${i}`]) done++;
+
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('top-progbar').style.width = (done / TOTAL * 100) + '%';
+
+  const qState = getQState();
+  let wrongCnt = 0;
+  for (let i = 1; i <= TOTAL; i++) {
+    const sel = qState[`q${i}`];
+    if (sel !== undefined && sel !== null && sel !== questions[i-1].answer) wrongCnt++;
+  }
+  const wnBtn = document.getElementById('wrong-note-btn');
+  const wnCnt = document.getElementById('wrong-note-cnt');
+  if (wrongCnt > 0) {
+    wnCnt.textContent = wrongCnt;
+    wnBtn.style.display = 'flex';
+  } else {
+    wnBtn.style.display = 'none';
+  }
+
+  if (done === TOTAL) {
+    p['u03'] = true;
+    saveProgress(p);
+    document.getElementById('complete-banner').classList.add('show');
+    document.getElementById('complete-banner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    document.getElementById('complete-banner').classList.remove('show');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESET
+// ─────────────────────────────────────────────
+function resetQuiz() {
+  if (!confirm('Unit 03의 모든 풀이 기록을 초기화하시겠습니까?\n(진행률과 오답 기록이 모두 삭제됩니다)')) return;
+
+  localStorage.removeItem(Q_STATE_KEY);
+
+  const p = getProgress();
+  for (let i = 1; i <= TOTAL; i++) delete p[`u03_q${i}`];
+  delete p['u03'];
+  saveProgress(p);
+
+  try {
+    const retry = JSON.parse(localStorage.getItem('adsp_retry') || '{}');
+    for (let i = 1; i <= TOTAL; i++) delete retry[`u03_q${i}`];
+    localStorage.setItem('adsp_retry', JSON.stringify(retry));
+  } catch {}
+
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
